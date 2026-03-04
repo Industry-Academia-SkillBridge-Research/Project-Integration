@@ -67,12 +67,9 @@ class GNNRankingService:
             raise RuntimeError("GNN model not loaded. Service not ready.")
         
         # Step 1: Get P_gnn for all skills from GNN
-        try:
-            gnn_probs = gnn_service.predict_skill_probs(candidate_id)
-            logger.info(f"GNN predicted probabilities for {len(gnn_probs)} skills")
-        except ValueError as e:
-            logger.error(f"Candidate {candidate_id} not found in GNN graph: {e}")
-            raise ValueError(f"Candidate {candidate_id} not found in training data") from e
+        # NOTE: predict_skill_probs uses fallback for new candidates (use_fallback=True by default)
+        gnn_probs = gnn_service.predict_skill_probs(candidate_id, use_fallback=True)
+        logger.info(f"GNN predicted probabilities for {len(gnn_probs)} skills")
         
         # Step 2: Get role required skills with importance scores
         role_importance_dict, total_jobs, role_name = RoleImportanceService.compute_role_importance(

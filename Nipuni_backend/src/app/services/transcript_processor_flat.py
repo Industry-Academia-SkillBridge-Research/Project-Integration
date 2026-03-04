@@ -106,7 +106,12 @@ def compute_skill_scores(db: Session, student_id: str) -> Dict:
     
     if not courses:
         logger.warning(f"No courses found for student {student_id}")
-        return {"skills": {}, "evidence": []}
+        return {
+            "student_id": student_id,
+            "skills": {},
+            "total_skills": 0,
+            "total_evidence": 0
+        }
     
     # Get course-skill mappings
     course_codes = [c.course_code for c in courses]
@@ -116,7 +121,12 @@ def compute_skill_scores(db: Session, student_id: str) -> Dict:
     
     if not mappings:
         logger.warning(f"No skill mappings found for student courses")
-        return {"skills": {}, "evidence": []}
+        return {
+            "student_id": student_id,
+            "skills": {},
+            "total_skills": 0,
+            "total_evidence": 0
+        }
     
     # Build course dict for easy lookup
     course_dict = {c.course_code: c for c in courses}

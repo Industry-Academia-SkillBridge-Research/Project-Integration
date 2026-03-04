@@ -1,0 +1,58 @@
+# FastAPI and ASGI server
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+
+# OAuth 2.0 authentication
+authlib==1.3.0
+httpx==0.26.0
+
+# JWT tokens
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Database
+sqlalchemy==2.0.25
+pymysql==1.1.0
+cryptography==41.0.7
+
+# Environment variables
+python-dotenv==1.0.0
+
+# CORS support
+python-multipart==0.0.6
+
+# Date/time handling
+python-dateutil==2.8.2
+
+# ========================================
+# Candidate Data Collection Dependencies
+# ========================================
+
+# PDF processing for CV parsing
+PyPDF2==3.0.1
+
+# Optional: Advanced PDF parsing (use if PyPDF2 is insufficient)
+# pdfplumber==0.10.3
+# pypdf==3.17.4
+
+# NLP and text processing (for skill extraction)
+# spacy==3.7.2  # Uncomment after: python -m spacy download en_core_web_sm
+
+# Web scraping (for LinkedIn, if using web scraping approach)
+# selenium==4.16.0
+# playwright==1.40.0
+# beautifulsoup4==4.12.2
+# lxml==5.0.0
+
+# GitHub API integration (alternative to existing Git Analyzer)
+# pygithub==2.1.1
+
+# Task queue (optional: for production-grade background processing)
+# celery==5.3.4
+# redis==5.0.1
+
+# File validation and handling
+python-magic==0.4.27  # For MIME type detection
+
+# Progress tracking and monitoring
+# tqdm==4.66.1

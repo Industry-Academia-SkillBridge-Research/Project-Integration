@@ -241,36 +241,46 @@ def get_candidate_skill_confidence(
     """
     logger.info(f"Fetching skill confidence for candidate: {candidate_id}")
     
-    with Neo4jConnection.get_session() as session:
-        skill_confidence = SkillConfidenceService.compute_confidence(session, candidate_id)
+    try:
+        with Neo4jConnection.get_session() as session:
+            skill_confidence = SkillConfidenceService.compute_confidence(session, candidate_id)
+            
+            if not skill_confidence:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Candidate not found or has no skill evidence: {candidate_id}"
+                )
+            
+            # Sort by confidence and take top-N
+            sorted_skills = sorted(
+                skill_confidence.items(),
+                key=lambda x: x[1]["confidence"],
+                reverse=True
+            )[:top_n]
+            
+            skills = [
+                SkillConfidence(
+                    skill_name=skill_name,
+                    confidence=data["confidence"],
+                    evidence_sources=data["evidence_sources"],
+                    evidence_count=data["evidence_count"]
+                )
+                for skill_name, data in sorted_skills
+            ]
         
-        if not skill_confidence:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Candidate not found or has no skill evidence: {candidate_id}"
-            )
-        
-        # Sort by confidence and take top-N
-        sorted_skills = sorted(
-            skill_confidence.items(),
-            key=lambda x: x[1]["confidence"],
-            reverse=True
-        )[:top_n]
-        
-        skills = [
-            SkillConfidence(
-                skill_name=skill_name,
-                confidence=data["confidence"],
-                evidence_sources=data["evidence_sources"],
-                evidence_count=data["evidence_count"]
-            )
-            for skill_name, data in sorted_skills
-        ]
+        return CandidateSkillProfile(
+            candidate_id=candidate_id,
+            skills=skills
+        )
     
-    return CandidateSkillProfile(
-        candidate_id=candidate_id,
-        skills=skills
-    )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get skill confidence: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve skill confidence: {str(e)}"
+        )
 
 
 @router.get(
@@ -349,32 +359,32 @@ def analyze_skill_gap(
             P_has_map,
             role_importance
         )
-    
-    # Convert to response model with categories
-    deficits_response = []
-    for d in deficits:
-        category = skill_to_category.get(d["skill_name"])
-        deficits_response.append(SkillDeficitEnhanced(
-            skill_name=d["skill_name"],
-            p_has=d["match_strength"],
-            tf=d["tf"],
-            df=d["df"],
-            idf=d["idf"],
-            importance=d["importance"],
-            deficit=d["deficit"],
-            category=category  # NEW: Optional field
-        ))
-    
-    return SkillGapResponseEnhanced(
-        candidate_id=candidate_id,
-        role_key=role_key,
-        role_name=role_name,
-        total_jobs=total_jobs,
-        total_roles=total_roles,
-        deficits=deficits_response,
-        category_gaps=category_gaps,  # NEW
-        category_mapping_stats=mapping_stats  # NEW
-    )
+        
+        # Convert to response model with categories
+        deficits_response = []
+        for d in deficits:
+            category = skill_to_category.get(d["skill_name"])
+            deficits_response.append(SkillDeficitEnhanced(
+                skill_name=d["skill_name"],
+                p_has=d["match_strength"],
+                tf=d["tf"],
+                df=d["df"],
+                idf=d["idf"],
+                importance=d["importance"],
+                deficit=d["deficit"],
+                category=category  # NEW: Optional field
+            ))
+        
+        return SkillGapResponseEnhanced(
+            candidate_id=candidate_id,
+            role_key=role_key,
+            role_name=role_name,
+            total_jobs=total_jobs,
+            total_roles=total_roles,
+            deficits=deficits_response,
+            category_gaps=category_gaps,  # NEW
+            category_mapping_stats=mapping_stats  # NEW
+        )
 
 
 @router.get(
@@ -404,68 +414,85 @@ def recommend_courses(
     """
     logger.info(f"Recommending courses: candidate={candidate_id}, role={role_key}")
     
-    with Neo4jConnection.get_session() as session:
-        # Compute candidate confidence
-        candidate_confidence = SkillConfidenceService.compute_confidence(session, candidate_id)
-        
-        # Compute role importance
-        role_importance, total_jobs, role_name = RoleImportanceService.compute_role_importance(
-            session, role_key
-        )
-        
-        if not role_importance:
-            raise HTTPException(status_code=404, detail=f"Role not found: {role_key}")
-        
-        # Compute top-K deficits with GRADED matching
-        top_deficits = DeficitService.compute_deficits_with_graded_matching(
-            session, candidate_id, role_importance, top_k
-        )
-        
-        # Build P_has map for category gains
-        P_has_map = {}
-        for skill_name in role_importance.keys():
-            if skill_name in candidate_confidence:
-                P_has_map[skill_name] = candidate_confidence[skill_name]["confidence"]
-            else:
-                deficit_entry = next(
-                    (d for d in top_deficits if d["skill_name"] == skill_name),
-                    None
+    try:
+        with Neo4jConnection.get_session() as session:
+            # Compute candidate confidence
+            candidate_confidence = SkillConfidenceService.compute_confidence(session, candidate_id)
+            
+            # Check if candidate exists
+            if not candidate_confidence:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Candidate not found or has no skills: {candidate_id}"
                 )
-                if deficit_entry:
-                    P_has_map[skill_name] = deficit_entry["match_strength"]
-                else:
-                    P_has_map[skill_name] = 0.0
-        
-        # Recommend courses
-        recommendations = CourseRecommendationService.recommend_courses(
-            session, candidate_id, top_deficits, top_n
-        )
-        
-        # NEW: Compute category gains for each course
-        enhanced_recommendations = []
-        for rec in recommendations:
-            # Compute category gains
-            category_gains = CategoryService.compute_category_gains(
-                session,
-                rec["covered_deficit_skills"],
-                role_importance,
-                P_has_map
+            
+            # Compute role importance
+            role_importance, total_jobs, role_name = RoleImportanceService.compute_role_importance(
+                session, role_key
             )
             
-            enhanced_recommendations.append(
-                CourseRecommendationEnhanced(
-                    **rec,
-                    category_gain=category_gains if category_gains else None  # NEW
+            if not role_importance:
+                raise HTTPException(status_code=404, detail=f"Role not found: {role_key}")
+            
+            # Compute top-K deficits with GRADED matching
+            top_deficits = DeficitService.compute_deficits_with_graded_matching(
+                session, candidate_id, role_importance, top_k
+            )
+            
+            # Build P_has map for category gains
+            P_has_map = {}
+            for skill_name in role_importance.keys():
+                if skill_name in candidate_confidence:
+                    P_has_map[skill_name] = candidate_confidence[skill_name]["confidence"]
+                else:
+                    deficit_entry = next(
+                        (d for d in top_deficits if d["skill_name"] == skill_name),
+                        None
+                    )
+                    if deficit_entry:
+                        P_has_map[skill_name] = deficit_entry["match_strength"]
+                    else:
+                        P_has_map[skill_name] = 0.0
+            
+            # Recommend courses
+            recommendations = CourseRecommendationService.recommend_courses(
+                session, candidate_id, top_deficits, top_n
+            )
+            
+            # NEW: Compute category gains for each course
+            enhanced_recommendations = []
+            for rec in recommendations:
+                # Compute category gains
+                category_gains = CategoryService.compute_category_gains(
+                    session,
+                    rec["covered_deficit_skills"],
+                    role_importance,
+                    P_has_map
                 )
+                
+                enhanced_recommendations.append(
+                    CourseRecommendationEnhanced(
+                        **rec,
+                        category_gain=category_gains if category_gains else None  # NEW
+                    )
+                )
+            
+            return CourseRecommendationResponseEnhanced(
+                candidate_id=candidate_id,
+                role_key=role_key,
+                role_name=role_name,
+                top_k_deficits_considered=len(top_deficits),
+                recommendations=enhanced_recommendations
             )
     
-    return CourseRecommendationResponseEnhanced(
-        candidate_id=candidate_id,
-        role_key=role_key,
-        role_name=role_name,
-        top_k_deficits_considered=len(top_deficits),
-        recommendations=enhanced_recommendations
-    )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to recommend courses: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate course recommendations: {str(e)}"
+        )
 
 
 @router.get(

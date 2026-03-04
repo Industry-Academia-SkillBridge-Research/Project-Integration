@@ -46,7 +46,7 @@ const Landing = () => {
             </div>
             <span className="text-xl font-bold text-foreground">SkillScope</span>
           </div>
-          <Button variant="glass" onClick={() => navigate('/modules')}>
+          <Button variant="glass" onClick={() => navigate('/auth')}>
             Get Started
             <ChevronRight className="w-4 h-4" />
           </Button>
@@ -72,11 +72,11 @@ const Landing = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="hero" size="xl" onClick={() => navigate('/modules')}>
+            <Button variant="hero" size="xl" onClick={() => navigate('/auth')}>
               Start Analysis
               <ChevronRight className="w-5 h-5" />
             </Button>
-            <Button variant="outline" size="xl" onClick={() => navigate('/modules')}>
+            <Button variant="outline" size="xl" onClick={() => navigate('/auth')}>
               View Demo
             </Button>
           </div>

@@ -383,6 +383,17 @@ class CVParserService:
             if isinstance(structured_data["skills"], dict):
                 structured_data["skills"] = [structured_data["skills"]]
             
+            # Sanitize skills: convert None values to empty lists
+            skill_categories = [
+                "programming_languages", "frameworks", "technologies",
+                "technical_skills", "database", "soft_skills"
+            ]
+            for skill_group in structured_data["skills"]:
+                if isinstance(skill_group, dict):
+                    for category in skill_categories:
+                        if category in skill_group and skill_group[category] is None:
+                            skill_group[category] = []
+            
             # Flatten all skills for all_skills field
             all_skills = []
             for skill_group in structured_data["skills"]:
@@ -405,11 +416,27 @@ class CVParserService:
             else:
                 structured_data["num_projects"] = 0
         
+        # Sanitize projects: convert None values to empty lists for technologies_used
+        if structured_data.get("projects_and_technologies_involved"):
+            for project in structured_data["projects_and_technologies_involved"]:
+                if isinstance(project, dict) and "technologies_used" in project:
+                    if project["technologies_used"] is None:
+                        project["technologies_used"] = []
+        
+        # Sanitize work experiences: convert None values to empty lists for used_skills
+        if structured_data.get("work_experiences"):
+            for work_exp in structured_data["work_experiences"]:
+                if isinstance(work_exp, dict) and "used_skills" in work_exp:
+                    if work_exp["used_skills"] is None:
+                        work_exp["used_skills"] = []
+        
         # Ensure default values for list fields
         if not structured_data.get("projects_and_technologies_involved"):
             structured_data["projects_and_technologies_involved"] = []
         if not structured_data.get("certificates_or_qualifications"):
             structured_data["certificates_or_qualifications"] = []
+        if not structured_data.get("work_experiences"):
+            structured_data["work_experiences"] = []
         
         # Validate with Pydantic model
         try:
