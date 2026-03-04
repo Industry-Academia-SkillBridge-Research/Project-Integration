@@ -1,19 +1,33 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Briefcase, TrendingUp, CheckCircle, AlertCircle, Award, ArrowLeft, Filter } from "lucide-react";
-import { getJobRecommendations } from "@/api/api";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { ErrorAlert } from "@/components/ui/ErrorAlert";
-import { Spinner } from "@/components/ui/Spinner";
+import { getJobRecommendations } from "@/services/nipuniService";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { Spinner } from "@/components/ui/spinner";
+
+interface JobMatch {
+  job_id: string;
+  title: string;
+  company: string;
+  role_key: string;
+  match_score: number;
+  total_required_skills: number;
+  matched_skills_count: number;
+  missing_skills_count: number;
+  matched_skills: Array<{ skill: string; score: number }>;
+  missing_skills: Array<{ skill: string; score: number; gap: number }>;
+  top_contributors: Array<{ skill: string; score: number }>;
+}
 
 export default function JobRecommendationsPage() {
   const { studentId } = useParams();
   const navigate = useNavigate();
   
-  const [jobs, setJobs] = useState([]);
+  const [jobs, setJobs] = useState<JobMatch[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<any>(null);
   const [topK, setTopK] = useState(10);
   const [threshold, setThreshold] = useState(70);
   const [roleKey, setRoleKey] = useState("");
@@ -27,27 +41,27 @@ export default function JobRecommendationsPage() {
     setError(null);
 
     try {
-      const data = await getJobRecommendations(studentId, {
+      const data = await getJobRecommendations(studentId!, {
         topK,
         threshold,
         roleKey: roleKey || undefined
-      });
+      }) as any;
       setJobs(data);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.response?.data || { message: err.message });
     } finally {
       setLoading(false);
     }
   };
 
-  const getMatchColor = (score) => {
+  const getMatchColor = (score: number) => {
     if (score >= 80) return "text-green-600 bg-green-50 border-green-200";
     if (score >= 60) return "text-blue-600 bg-blue-50 border-blue-200";
     if (score >= 40) return "text-yellow-600 bg-yellow-50 border-yellow-200";
     return "text-red-600 bg-red-50 border-red-200";
   };
 
-  const getMatchLabel = (score) => {
+  const getMatchLabel = (score: number) => {
     if (score >= 80) return "Excellent Match";
     if (score >= 60) return "Good Match";
     if (score >= 40) return "Fair Match";
@@ -63,15 +77,15 @@ export default function JobRecommendationsPage() {
         <div>
           <Button 
             variant="ghost" 
-            onClick={() => navigate(`/students/${studentId}/skills`)}
+            onClick={() => navigate(`/skill-gap-analysis/${studentId}/skills`)}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Skills
           </Button>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Job Recommendations</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Browse Job Opportunities</h1>
           <p className="text-muted-foreground">
-            Personalized job matches based on your skill profile
+            Explore job openings matched to your skill profile
           </p>
         </div>
       </div>
@@ -170,7 +184,7 @@ export default function JobRecommendationsPage() {
                     </div>
                     <CardTitle 
                       className="text-xl mb-1 text-primary hover:underline cursor-pointer"
-                      onClick={() => navigate(`/jobs/${job.job_id}`)}
+                      onClick={() => navigate(`/skill-gap-analysis/jobs/${job.job_id}`)}
                     >
                       {job.title}
                     </CardTitle>

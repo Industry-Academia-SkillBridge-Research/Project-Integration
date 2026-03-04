@@ -14,6 +14,9 @@ export const API_CONFIG = {
   // AI Explainer - Now running locally on Agent Runtime (Port 8003)
   // No longer using external Colab/ngrok tunnel
   EXPLAINER_API: import.meta.env.VITE_EXPLAINER_API_URL || 'http://localhost:8003',
+  
+  // Nipuni Backend - Transcript-based Skill Validation (Port 8000)
+  NIPUNI_API: import.meta.env.VITE_NIPUNI_API_URL || 'http://localhost:8000',
 } as const;
 
 /**

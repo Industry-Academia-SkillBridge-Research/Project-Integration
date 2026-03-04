@@ -1,26 +1,75 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Award, TrendingUp, Calendar, ArrowLeft, Target, CheckCircle, Mail, User, Edit2, Camera, Download, Briefcase, AlertCircle, Sparkles, Trash2 } from "lucide-react";
-import { getStudentProfile, updateStudentProfile, uploadProfilePhoto, getMLJobRecommendations, clearStudentPortfolio } from "@/api/api";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { ErrorAlert } from "@/components/ui/ErrorAlert";
-import { Spinner } from "@/components/ui/Spinner";
+import { 
+  Award, TrendingUp, Calendar, ArrowLeft, Target, CheckCircle, Mail, 
+  User, Edit2, Camera, Download, Briefcase, AlertCircle, Sparkles, Trash2 
+} from "lucide-react";
+import { 
+  getStudentProfile, updateStudentProfile, uploadProfilePhoto, 
+  getMLJobRecommendations, clearStudentPortfolio 
+} from "@/services/nipuniService";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { Spinner } from "@/components/ui/spinner";
+
+interface PortfolioSkill {
+  skill_name: string;
+  correct_count: number;
+  total_questions: number;
+  verified_score: number;
+  claimed_score: number;
+  final_score: number;
+  final_level: string;
+  updated_at: string;
+}
+
+interface StudentProfile {
+  student_id: string;
+  name?: string;
+  email?: string;
+  program?: string;
+  specialization?: string;
+  intake?: string;
+  bio?: string;
+  photo_url?: string;
+  portfolio: PortfolioSkill[];
+}
+
+interface JobRecommendation {
+  job_id: string;
+  title: string;
+  company: string;
+  role_key: string;
+  match_score: number;
+  total_required_skills: number;
+  proficient_skills_count: number;
+  missing_skills_count: number;
+  proficient_skills: Array<{ skill: string; score: number }>;
+  missing_skills: Array<{ skill: string; score: number; gap: number }>;
+  description?: string;
+}
 
 export default function PortfolioPage() {
   const { studentId } = useParams();
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({});
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    program: "",
+    specialization: "",
+    bio: ""
+  });
   const [uploading, setUploading] = useState(false);
-  const [jobs, setJobs] = useState([]);
+  const [jobs, setJobs] = useState<JobRecommendation[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
-  const [expandedJobs, setExpandedJobs] = useState(new Set());
+  const [expandedJobs, setExpandedJobs] = useState(new Set<string>());
 
   useEffect(() => {
     fetchProfile();
@@ -31,7 +80,7 @@ export default function PortfolioPage() {
     try {
       setLoading(true);
       setError(null);
-      const data = await getStudentProfile(studentId);
+      const data = await getStudentProfile(studentId!) as any;
       setProfile(data);
       setEditForm({
         name: data.name || "",
@@ -40,22 +89,24 @@ export default function PortfolioPage() {
         specialization: data.specialization || "",
         bio: data.bio || ""
       });
-    } catch (err) {
+    } catch (err: any) {
       setError(err.response?.data || { message: err.message });
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePhotoUpload = async (e) => {
-    const file = e.target.files[0];
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
     try {
       setUploading(true);
-      const result = await uploadProfilePhoto(studentId, file);
-      setProfile({ ...profile, photo_url: result.photo_url });
-    } catch (err) {
+      const result = await uploadProfilePhoto(studentId!, file) as any;
+      if (profile) {
+        setProfile({ ...profile, photo_url: result.photo_url });
+      }
+    } catch (err: any) {
       alert("Failed to upload photo: " + err.message);
     } finally {
       setUploading(false);
@@ -64,10 +115,10 @@ export default function PortfolioPage() {
 
   const handleSaveProfile = async () => {
     try {
-      await updateStudentProfile(studentId, editForm);
+      await updateStudentProfile(studentId!, editForm);
       setIsEditing(false);
       fetchProfile();
-    } catch (err) {
+    } catch (err: any) {
       alert("Failed to update profile: " + err.message);
     }
   };
@@ -85,11 +136,10 @@ export default function PortfolioPage() {
     
     try {
       setLoading(true);
-      const result = await clearStudentPortfolio(studentId);
+      const result = await clearStudentPortfolio(studentId!) as any;
       alert(`Successfully cleared ${result.deleted_count} portfolio records.`);
-      // Refresh the profile to show empty portfolio
       await fetchProfile();
-    } catch (err) {
+    } catch (err: any) {
       alert("Failed to clear portfolio: " + (err.response?.data?.detail || err.message));
     } finally {
       setLoading(false);
@@ -99,8 +149,7 @@ export default function PortfolioPage() {
   const fetchJobRecommendations = async () => {
     try {
       setLoadingJobs(true);
-      const data = await getMLJobRecommendations(studentId, { topK: 5, threshold: 70, useVerified: true });
-      // Backend returns { recommendations: [...] }, extract the array
+      const data = await getMLJobRecommendations(studentId!, { topK: 5, threshold: 70, useVerified: true }) as any;
       setJobs(data.recommendations || []);
     } catch (err) {
       console.error('Failed to fetch ML job recommendations:', err);
@@ -110,14 +159,14 @@ export default function PortfolioPage() {
     }
   };
 
-  const getMatchColor = (score) => {
+  const getMatchColor = (score: number) => {
     if (score >= 80) return "text-green-600 bg-green-50 border-green-200";
     if (score >= 60) return "text-blue-600 bg-blue-50 border-blue-200";
     if (score >= 40) return "text-yellow-600 bg-yellow-50 border-yellow-200";
     return "text-red-600 bg-red-50 border-red-200";
   };
 
-  const toggleJobExpansion = (jobId) => {
+  const toggleJobExpansion = (jobId: string) => {
     setExpandedJobs(prev => {
       const newSet = new Set(prev);
       if (newSet.has(jobId)) {
@@ -129,7 +178,7 @@ export default function PortfolioPage() {
     });
   };
 
-  const getLevelColor = (level) => {
+  const getLevelColor = (level: string) => {
     switch (level) {
       case "Advanced": return "bg-green-100 text-green-700 border-green-200";
       case "Intermediate": return "bg-blue-100 text-blue-700 border-blue-200";
@@ -138,7 +187,7 @@ export default function PortfolioPage() {
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       year: 'numeric'
@@ -154,7 +203,7 @@ export default function PortfolioPage() {
       <div className="flex justify-between items-center print:hidden">
         <Button 
           variant="ghost" 
-          onClick={() => navigate(`/students/${studentId}/skills`)}
+          onClick={() => navigate(`/skill-gap-analysis/${studentId}/skills`)}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
@@ -325,7 +374,7 @@ export default function PortfolioPage() {
               <p className="text-muted-foreground mb-4">
                 No validated skills yet. Take a quiz to build your portfolio!
               </p>
-              <Button onClick={() => navigate(`/students/${studentId}/skills`)}>
+              <Button onClick={() => navigate(`/skill-gap-analysis/${studentId}/skills`)}>
                 Start Skill Validation
               </Button>
             </div>
@@ -412,7 +461,7 @@ export default function PortfolioPage() {
                       </div>
                       <h3 
                         className="font-bold text-xl mb-1 text-primary hover:underline cursor-pointer"
-                        onClick={() => navigate(`/jobs/${job.job_id}`)}
+                        onClick={() => navigate(`/skill-gap-analysis/jobs/${job.job_id}`)}
                       >
                         {job.title}
                       </h3>
@@ -509,7 +558,7 @@ export default function PortfolioPage() {
               ))}
               
               <Button
-                onClick={() => navigate(`/students/${studentId}/jobs`)}
+                onClick={() => navigate(`/skill-gap-analysis/${studentId}/jobs`)}
                 className="w-full gap-2"
                 variant="outline"
               >
@@ -525,20 +574,20 @@ export default function PortfolioPage() {
       <div className="flex justify-between print:hidden">
         <Button
           variant="outline"
-          onClick={() => navigate(`/students/${studentId}/transcript`)}
+          onClick={() => navigate(`/skill-gap-analysis/${studentId}/transcript`)}
         >
           Back to Dashboard
         </Button>
         <div className="flex gap-3">
           <Button
             variant="outline"
-            onClick={() => navigate(`/students/${studentId}/jobs`)}
+            onClick={() => navigate(`/skill-gap-analysis/${studentId}/jobs`)}
           >
             <Briefcase className="w-4 h-4 mr-2" />
             View Job Matches
           </Button>
           <Button
-            onClick={() => navigate(`/students/${studentId}/skills`)}
+            onClick={() => navigate(`/skill-gap-analysis/${studentId}/skills`)}
           >
             Take Quiz
           </Button>

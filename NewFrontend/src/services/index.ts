@@ -7,3 +7,4 @@ export * from './agentService';
 export * from './jobGapService';
 export * from './recommendationService';
 export * from './explainerService';
+export * from './nipuniService';

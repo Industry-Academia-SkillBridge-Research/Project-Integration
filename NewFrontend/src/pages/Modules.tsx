@@ -42,7 +42,7 @@ const Modules = () => {
         "Priority skill recommendations",
         "Learning resource suggestions"
       ],
-      link: "/skill-gap",
+      link: "/skill-gap-analysis",
       gradient: "pipeline-stage-2"
     },
     {

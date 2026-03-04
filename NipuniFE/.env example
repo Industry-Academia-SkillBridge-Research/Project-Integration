@@ -1,6 +1,0 @@
-VITE_SUPABASE_PROJECT_ID="xqzaepgzwgriehyhcaah"
-VITE_SUPABASE_PUBLISHABLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxemFlcGd6d2dyaWVoeWhjYWFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxMzY0NjAsImV4cCI6MjA3NTcxMjQ2MH0.OVV-_fq9xk3Hd2ADec1zoeCnEvTIiC4tfX3ZzOfwuCQ"
-VITE_SUPABASE_URL="https://xqzaepgzwgriehyhcaah.supabase.co"
-
-# Backend API Configuration
-VITE_BACKEND_URL=http://localhost:8000

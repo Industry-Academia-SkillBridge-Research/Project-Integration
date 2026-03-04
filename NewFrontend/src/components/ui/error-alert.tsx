@@ -1,7 +1,11 @@
 import { AlertCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "./Card";
+import { Card, CardContent, CardHeader, CardTitle } from "./card";
 
-export function ErrorAlert({ error }) {
+interface ErrorAlertProps {
+  error: any;
+}
+
+export function ErrorAlert({ error }: ErrorAlertProps) {
   // Extract error message from various error formats
   const getErrorMessage = () => {
     if (typeof error === 'string') return error;

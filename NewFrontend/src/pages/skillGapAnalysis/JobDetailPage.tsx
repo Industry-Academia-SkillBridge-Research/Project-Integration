@@ -1,19 +1,36 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Briefcase, Building, MapPin, Calendar, Clock, Tag, ExternalLink } from "lucide-react";
-import { getJobDetails } from "@/api/api";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { ErrorAlert } from "@/components/ui/ErrorAlert";
-import { Spinner } from "@/components/ui/Spinner";
+import { ArrowLeft, Briefcase, Building, MapPin, Calendar, Tag, ExternalLink } from "lucide-react";
+import { getJobDetails } from "@/services/nipuniService";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { Spinner } from "@/components/ui/spinner";
+
+interface JobDetail {
+  job_id: string;
+  title: string;
+  company: string;
+  description: string;
+  location?: string;
+  posted_date?: string;
+  role_key: string;
+  seniority_level?: string;
+  employment_type?: string;
+  job_function?: string;
+  industries?: string;
+  role_tag?: string;
+  job_url?: string;
+  skills?: string[];
+}
 
 export default function JobDetailPage() {
   const { jobId } = useParams();
   const navigate = useNavigate();
   
-  const [job, setJob] = useState(null);
+  const [job, setJob] = useState<JobDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<any>(null);
 
   useEffect(() => {
     fetchJobDetails();
@@ -23,9 +40,9 @@ export default function JobDetailPage() {
     try {
       setLoading(true);
       setError(null);
-      const data = await getJobDetails(jobId);
+      const data = await getJobDetails(jobId!) as any;
       setJob(data);
-    } catch (err) {
+    } catch (err: any) {
       setError({ message: err.message || "Failed to load job details" });
     } finally {
       setLoading(false);
