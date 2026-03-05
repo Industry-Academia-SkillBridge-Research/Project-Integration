@@ -7,6 +7,8 @@ requires-python = ">=3.12"
 dependencies = [
     "datasets>=4.5.0",
     "fastapi>=0.129.0",
+    "google-api-core>=2.30.0",
+    "google-cloud-aiplatform>=1.140.0",
     "google-genai>=1.65.0",
     "httpx>=0.28.1",
     "huggingface-hub>=1.4.1",
@@ -17,6 +19,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "requests>=2.32.5",
     "streamlit>=1.54.0",
+    "tqdm>=4.67.3",
     "uvicorn[standard]>=0.41.0",
     "watchdog>=6.0.0",
 ]

@@ -11,3 +11,7 @@ httpx
 datasets
 huggingface_hub
 google-genai
+google-api-core
+google-cloud-aiplatform
+neo4j
+tqdm
