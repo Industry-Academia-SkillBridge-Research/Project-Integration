@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+ollama
+streamlit
+watchdog
+requests
+pytest
+httpx
+datasets
+huggingface_hub
+google-genai

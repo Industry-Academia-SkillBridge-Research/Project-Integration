@@ -1,0 +1,29 @@
+# Python
+__pycache__
+*.pyc
+
+# Streamlit
+.streamlit
+
+# Ollama
+.ollama
+
+# Uvicorn
+.venv
+
+# Training logs
+*.log
+
+# Secrets
+.env
+
+# Models (Heavy)
+
+*.gguf
+*.pt
+*.safetensors
+*.bin
+
+# Documents
+*.pdf
+*.tex
