@@ -25,6 +25,11 @@ import {
   JobDetailPage,
   PortfolioPage
 } from "./pages/skillGapAnalysis";
+import {
+  UploadJDPage,
+  InterviewPage,
+  FeedbackPage
+} from "./pages/interviewPrep";
 
 const queryClient = new QueryClient();
 
@@ -161,6 +166,33 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            
+            {/* Interview Prep Workflow (Nilmani Backend) */}
+            <Route
+              path="/interview-prep"
+              element={
+                <ProtectedRoute>
+                  <UploadJDPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/interview-prep/interview"
+              element={
+                <ProtectedRoute>
+                  <InterviewPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/interview-prep/feedback"
+              element={
+                <ProtectedRoute>
+                  <FeedbackPage />
+                </ProtectedRoute>
+              }
+            />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
