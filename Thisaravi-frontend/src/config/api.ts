@@ -32,7 +32,7 @@ export const ENDPOINTS = {
     CANDIDATES: `${AGENT_BASE}/candidates`,
   },
   ROLE_SKILLS: {
-    ROLES: `${ROLE_SKILLS_BASE}/roles`,
+    ROLES: `${API_BASE}/roles`,
     JOBS_BY_ROLE: (roleKey: string) => `${API_BASE}/jobs-by-role?role_key=${encodeURIComponent(roleKey)}`,
   },
 } as const;

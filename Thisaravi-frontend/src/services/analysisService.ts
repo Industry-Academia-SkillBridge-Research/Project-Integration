@@ -58,7 +58,9 @@ async function* _streamResponse(response: Response): AsyncGenerator<string> {
 export async function fetchRoles(): Promise<RoleInfo[]> {
   const response = await fetch(ENDPOINTS.ROLE_SKILLS.ROLES);
   if (!response.ok) throw new Error(`Failed to fetch roles: ${response.status}`);
-  return response.json();
+  const data = await response.json();
+  // Backend returns { roles: [...], count: N }
+  return Array.isArray(data) ? data : (data.roles ?? []);
 }
 
 export async function fetchJobsByRole(roleKey: string): Promise<LinkedInJobResult[]> {
