@@ -1,0 +1,79 @@
+# ========================================
+# Common Requirements for All Backend Services
+# ========================================
+
+# Web Framework
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Database
+neo4j
+SQLAlchemy
+pymysql
+cryptography
+alembic
+
+# Data Models & Configuration
+pydantic
+pydantic-settings
+python-dotenv
+
+# HTTP & Networking
+requests
+urllib3
+httpx
+
+# Authentication & Security
+authlib
+python-jose[cryptography]
+passlib[bcrypt]
+itsdangerous
+
+# Data Science & ML
+numpy
+pandas
+scikit-learn
+xgboost
+
+# Deep Learning
+torch
+torch-geometric
+transformers
+peft
+accelerate
+
+# LLM & NLP
+openai
+google-genai
+langchain
+langchain-google-genai
+langchain-community
+langchain-ollama
+sentence-transformers
+
+# Vector Search & Embeddings
+chromadb
+faiss-cpu
+
+# PDF Processing
+PyPDF2
+pdfplumber
+PyMuPDF
+pdf2image
+
+# Image Processing & OCR
+Pillow
+easyocr
+pytesseract
+
+# Explainability & Visualization
+shap
+matplotlib
+seaborn
+
+# Utilities
+joblib
+tqdm
+python-dateutil
+python-magic
