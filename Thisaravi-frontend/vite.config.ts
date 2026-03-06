@@ -8,9 +8,9 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // Main recommendation API (port 8010)
+      // Thisaravi Backend API (port 8185)
       '/api': {
-        target: 'http://localhost:8010',
+        target: 'http://localhost:8185',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },

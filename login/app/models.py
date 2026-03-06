@@ -119,6 +119,15 @@ class Candidate(Base):
     extracted_skills = Column(Text, nullable=True)  # JSON string of skills
     linkedin_profile_data = Column(Text, nullable=True)  # JSON string of LinkedIn data
     github_profile_data = Column(Text, nullable=True)  # JSON string of GitHub data
+    
+    # Analysis results from Personalized Learning Path module
+    latest_analysis_date = Column(DateTime(timezone=True), nullable=True)  # Last analysis timestamp
+    readiness_score = Column(Integer, nullable=True)  # 0-100 readiness score
+    skill_gap_index = Column(Text, nullable=True)  # JSON string of skill gap metrics
+    ai_explanation = Column(Text, nullable=True)  # AI-generated explanation from Qwen model
+    matched_skills = Column(Text, nullable=True)  # JSON array of skills candidate has
+    missing_skills = Column(Text, nullable=True)  # JSON array of skills candidate needs
+    analysis_summary = Column(Text, nullable=True)  # Brief summary of analysis results
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

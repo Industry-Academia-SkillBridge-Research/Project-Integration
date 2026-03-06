@@ -4,8 +4,9 @@ Candidate Service - Business logic for candidate data collection and processing
 import os
 import uuid
 import shutil
+import json
 from datetime import datetime
-from typing import Optional, BinaryIO
+from typing import Optional, BinaryIO, Dict, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
 from fastapi import UploadFile
@@ -208,7 +209,7 @@ class CandidateService:
     @staticmethod
     def get_candidate_status_summary(db: Session, candidate_id: int) -> dict:
         """
-        Get comprehensive status summary for a candidate
+        Get comprehensive status summary for a candidate including analysis results
         """
         candidate = CandidateService.get_candidate_by_id(db, candidate_id)
         
@@ -221,6 +222,12 @@ class CandidateService:
         ).all()
 
         cv_document = next((d for d in documents if d.document_type == DocumentType.CV), None)
+        
+        # Parse JSON fields
+        extracted_skills = json.loads(candidate.extracted_skills) if candidate.extracted_skills else None
+        matched_skills = json.loads(candidate.matched_skills) if candidate.matched_skills else None
+        missing_skills = json.loads(candidate.missing_skills) if candidate.missing_skills else None
+        skill_gap_index = json.loads(candidate.skill_gap_index) if candidate.skill_gap_index else None
         
         return {
             "candidate_id": candidate.id,
@@ -243,7 +250,18 @@ class CandidateService:
                 "processing_completed_at": candidate.processing_completed_at.isoformat() if candidate.processing_completed_at else None,
             },
             "documents_count": len(documents),
-            "ready_for_recommendations": candidate.status == ProcessingStatus.READY_FOR_RECOMMENDATIONS
+            "ready_for_recommendations": candidate.status == ProcessingStatus.READY_FOR_RECOMMENDATIONS,
+            # Analysis results (new fields)
+            "analysis": {
+                "latest_analysis_date": candidate.latest_analysis_date.isoformat() if candidate.latest_analysis_date else None,
+                "readiness_score": candidate.readiness_score,
+                "skill_gap_index": skill_gap_index,
+                "ai_explanation": candidate.ai_explanation,
+                "matched_skills": matched_skills,
+                "missing_skills": missing_skills,
+                "analysis_summary": candidate.analysis_summary,
+                "extracted_skills": extracted_skills
+            }
         }
 
     @staticmethod
@@ -273,3 +291,67 @@ class CandidateService:
         db.commit()
         
         return True
+
+    @staticmethod
+    def update_analysis_data(
+        db: Session,
+        user_id: int,
+        readiness_score: Optional[int] = None,
+        skill_gap_index: Optional[Any] = None,
+        ai_explanation: Optional[str] = None,
+        matched_skills: Optional[List[Dict]] = None,
+        missing_skills: Optional[List[Dict]] = None,
+        analysis_summary: Optional[str] = None,
+        extracted_skills: Optional[List[str]] = None
+    ) -> Candidate:
+        """
+        Update candidate profile with analysis results from Personalized Learning Path module.
+        
+        Args:
+            db: Database session
+            user_id: User ID to find candidate
+            readiness_score: Overall readiness score (0-100)
+            skill_gap_index: Skill gap metrics
+            ai_explanation: AI-generated explanation text
+            matched_skills: List of skills candidate has
+            missing_skills: List of skills candidate needs
+            analysis_summary: Brief summary of analysis
+            extracted_skills: Skills extracted from CV/profile
+            
+        Returns:
+            Updated Candidate object
+        """
+        candidate = db.query(Candidate).filter(Candidate.user_id == user_id).first()
+        
+        if not candidate:
+            raise ValueError(f"No candidate profile found for user_id {user_id}")
+
+        # Update analysis fields
+        candidate.latest_analysis_date = datetime.utcnow()
+        
+        if readiness_score is not None:
+            candidate.readiness_score = readiness_score
+            
+        if skill_gap_index is not None:
+            candidate.skill_gap_index = json.dumps(skill_gap_index)
+            
+        if ai_explanation is not None:
+            candidate.ai_explanation = ai_explanation
+            
+        if matched_skills is not None:
+            candidate.matched_skills = json.dumps(matched_skills)
+            
+        if missing_skills is not None:
+            candidate.missing_skills = json.dumps(missing_skills)
+            
+        if analysis_summary is not None:
+            candidate.analysis_summary = analysis_summary
+            
+        if extracted_skills is not None:
+            candidate.extracted_skills = json.dumps(extracted_skills)
+
+        candidate.updated_at = datetime.utcnow()
+
+        db.commit()
+        db.refresh(candidate)
+        return candidate

@@ -1,9 +1,10 @@
 """
 Candidate API Routes - Data collection and status endpoints
 """
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status, Body
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel
 
 from app.database import get_db
 from app.models import User, Candidate, TargetRole
@@ -13,6 +14,19 @@ from app.workers.candidate_processor import CandidateProcessor
 
 
 router = APIRouter(prefix="/candidate", tags=["Candidate"])
+
+
+# Pydantic models for analysis update
+class AnalysisUpdateRequest(BaseModel):
+    """Request model for updating candidate profile with analysis results"""
+    readiness_score: Optional[int] = None
+    skill_gap_index: Optional[Any] = None
+    ai_explanation: Optional[str] = None
+    matched_skills: Optional[List[Dict]] = None
+    missing_skills: Optional[List[Dict]] = None
+    analysis_summary: Optional[str] = None
+    extracted_skills: Optional[List[str]] = None
+    target_role: Optional[str] = None
 
 
 @router.post("/init", status_code=status.HTTP_201_CREATED)
@@ -210,6 +224,75 @@ async def get_my_candidate_profile(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching candidate profile: {str(e)}"
+        )
+
+
+@router.put("/me/analysis")
+async def update_candidate_analysis(
+    analysis_data: AnalysisUpdateRequest = Body(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update candidate profile with analysis results from Personalized Learning Path module.
+    
+    This endpoint is called after CV analysis completes to save:
+    - Extracted skills from CV
+    - Readiness score
+    - Skill gap analysis
+    - AI-generated explanations
+    - Matched and missing skills
+    
+    Authentication: Required (JWT Bearer token)
+    """
+    try:
+        # DEBUG: Log received AI explanation
+        print(f"🔍 DEBUG - Received ai_explanation: {analysis_data.ai_explanation}")
+        print(f"🔍 DEBUG - AI explanation type: {type(analysis_data.ai_explanation)}")
+        print(f"🔍 DEBUG - AI explanation length: {len(analysis_data.ai_explanation) if analysis_data.ai_explanation else 0}")
+        
+        # Update candidate analysis data
+        candidate = CandidateService.update_analysis_data(
+            db=db,
+            user_id=current_user.id,
+            readiness_score=analysis_data.readiness_score,
+            skill_gap_index=analysis_data.skill_gap_index,
+            ai_explanation=analysis_data.ai_explanation,
+            matched_skills=analysis_data.matched_skills,
+            missing_skills=analysis_data.missing_skills,
+            analysis_summary=analysis_data.analysis_summary,
+            extracted_skills=analysis_data.extracted_skills
+        )
+        
+        # Update target role if provided
+        if analysis_data.target_role:
+            try:
+                role_enum = TargetRole(analysis_data.target_role)
+                candidate.target_role = role_enum
+                db.commit()
+                db.refresh(candidate)
+            except ValueError:
+                pass  # Invalid role, skip update
+
+        return {
+            "status": "success",
+            "message": "Analysis results saved successfully",
+            "data": {
+                "candidate_id": candidate.id,
+                "latest_analysis_date": candidate.latest_analysis_date.isoformat() if candidate.latest_analysis_date else None,
+                "readiness_score": candidate.readiness_score
+            }
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating analysis data: {str(e)}"
         )
 
 

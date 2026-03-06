@@ -4,6 +4,8 @@ import { CheckCircle2, Loader2, Circle, AlertTriangle } from "lucide-react";
 import { runAgentPipeline, runAgentPipelineFromPDF } from "@/services/agentService";
 import { analyzeJobGap } from "@/services/jobGapService";
 import { generateExplanation, buildExplainerPayload } from "@/services/explainerService";
+import { saveAnalysisToProfile, buildAnalysisData } from "@/services/profileService";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
 interface PipelineStage {
@@ -62,6 +64,7 @@ const pipelineStages: PipelineStage[] = [
 const Pipeline = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { checkAuth } = useAuth();
   const [currentStage, setCurrentStage] = useState(0);
   const [completedStages, setCompletedStages] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -215,6 +218,20 @@ const Pipeline = () => {
         }
 
         setResults(gapResults);
+
+        // Save analysis results to profile
+        try {
+          const analysisData = buildAnalysisData(gapResults, roleLabel ||gapResults.roleLabel);
+          await saveAnalysisToProfile(analysisData);
+          console.log("✅ Analysis saved to candidate profile");
+          
+          // Refresh user profile data to include the new analysis
+          await checkAuth();
+          console.log("✅ Profile data refreshed");
+        } catch (saveErr) {
+          console.warn("⚠️ Could not save analysis to profile:", saveErr);
+          // Continue even if save fails - analysis is still available
+        }
 
         // Navigate to results page after a short delay
         setTimeout(() => {

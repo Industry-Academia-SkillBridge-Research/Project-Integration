@@ -14,6 +14,8 @@ import Pipeline from "./pages/Pipeline";
 import SkillGap from "./pages/SkillGap";
 import Recommendations from "./pages/Recommendations";
 import NotFound from "./pages/NotFound";
+import Profile from "./pages/Profile";
+import CourseRecommendations from "./pages/CourseRecommendations";
 import {
   TranscriptUploadPage,
   TranscriptDetailsPage,
@@ -30,6 +32,7 @@ import {
   InterviewPage,
   FeedbackPage
 } from "./pages/interviewPrep";
+import IndustryConnect from "./pages/IndustryConnect";
 
 const queryClient = new QueryClient();
 
@@ -64,10 +67,26 @@ const App = () => (
               }
             />
             <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/pipeline"
               element={
                 <ProtectedRoute>
                   <Pipeline />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/courses"
+              element={
+                <ProtectedRoute>
+                  <CourseRecommendations />
                 </ProtectedRoute>
               }
             />
@@ -189,6 +208,16 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <FeedbackPage />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Industry Connect Portal (Thisaravi Backend) */}
+            <Route
+              path="/industry-connect"
+              element={
+                <ProtectedRoute>
+                  <IndustryConnect />
                 </ProtectedRoute>
               }
             />
