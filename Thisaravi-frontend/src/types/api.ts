@@ -154,6 +154,12 @@ export interface PromptEvolution {
   change_summary: string;
 }
 
+// History types — student output + optional feedback
+export interface HistoryEntry {
+  output: ModelOutputLog;
+  feedback: FeedbackEntry | null;
+}
+
 export interface EvolutionStatus {
   current_prompt_version: string;
   total_feedback: number;

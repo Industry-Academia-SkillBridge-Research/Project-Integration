@@ -14,6 +14,7 @@ export const ENDPOINTS = {
     UNREVIEWED: `${API_BASE}/unreviewed-outputs`,
     STATUS: `${API_BASE}/feedback-status`,
     ALL: `${API_BASE}/all-feedback`,
+    MY_OUTPUTS: `${API_BASE}/my-outputs`,
   },
   EVOLUTION: {
     RUN_ANALYSIS: `${API_BASE}/run-analysis`,

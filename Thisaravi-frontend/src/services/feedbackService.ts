@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/config/api';
-import type { FeedbackEntry, ModelOutputLog, EvolutionStatus } from '@/types/api';
+import type { FeedbackEntry, ModelOutputLog, EvolutionStatus, HistoryEntry } from '@/types/api';
 
 export async function fetchUnreviewedOutputs(): Promise<ModelOutputLog[]> {
   const res = await fetch(ENDPOINTS.FEEDBACK.UNREVIEWED);
@@ -28,5 +28,12 @@ export async function submitFeedback(
     body: JSON.stringify(entry),
   });
   if (!res.ok) throw new Error(`Failed to submit feedback: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchMyHistory(studentName: string): Promise<HistoryEntry[]> {
+  const url = `${ENDPOINTS.FEEDBACK.MY_OUTPUTS}?student_name=${encodeURIComponent(studentName)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
   return res.json();
 }

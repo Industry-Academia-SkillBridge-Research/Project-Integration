@@ -14,6 +14,7 @@ import NotFoundPage from '@/pages/NotFoundPage';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
 import ProfilePage from '@/pages/ProfilePage';
+import HistoryPage from '@/pages/HistoryPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,7 @@ function App() {
                 }
               >
                 <Route path="/" element={<RoleProtectedRoute allowedRoles={['student']}><AnalysisPage /></RoleProtectedRoute>} />
+                <Route path="/history" element={<RoleProtectedRoute allowedRoles={['student']}><HistoryPage /></RoleProtectedRoute>} />
                 <Route path="/feedback" element={<RoleProtectedRoute allowedRoles={['expert']}><FeedbackPage /></RoleProtectedRoute>} />
                 <Route path="/evolution" element={<RoleProtectedRoute allowedRoles={['expert']}><EvolutionPage /></RoleProtectedRoute>} />
                 <Route path="/settings" element={<RoleProtectedRoute allowedRoles={['expert']}><SettingsPage /></RoleProtectedRoute>} />

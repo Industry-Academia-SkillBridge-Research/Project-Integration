@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { NavLink } from 'react-router-dom';
-import { BarChart3, MessageSquare, Sparkles, Settings, Menu } from 'lucide-react';
+import { BarChart3, MessageSquare, Sparkles, Settings, Menu, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import type { UserType } from '@/context/AuthContext';
@@ -18,6 +18,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { to: '/', label: 'Analysis', icon: BarChart3, allowedRoles: ['student'] },
+  { to: '/history', label: 'History', icon: History, allowedRoles: ['student'] },
   { to: '/feedback', label: 'Feedback', icon: MessageSquare, allowedRoles: ['expert'] },
   { to: '/evolution', label: 'Evolution', icon: Sparkles, allowedRoles: ['expert'] },
   { to: '/settings', label: 'Settings', icon: Settings, allowedRoles: ['expert'] },

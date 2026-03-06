@@ -709,6 +709,53 @@ async def get_all_feedback():
     return [e.model_dump() for e in entries]
 
 
+@app.get("/my-outputs")
+async def get_my_outputs(student_name: str):
+    """
+    Return all model outputs for a specific student, together with any
+    expert feedback that was given on each output.
+
+    Matching strategy: the ``model_input.student_data.demographics`` field
+    stores ``"{name}, {role}"`` – we accept a match if the demographics string
+    starts with the requested name (case-insensitive).
+    """
+    name_lower = student_name.strip().lower()
+
+    # ── 1. Collect all outputs belonging to this student ──────────────────
+    all_outputs = feedback_storage.load_all_outputs()
+    student_outputs = []
+    for out in all_outputs:
+        demographics = (
+            out.get("model_input", {})
+               .get("student_data", {})
+               .get("demographics", "")
+        )
+        if demographics.lower().startswith(name_lower):
+            student_outputs.append(out)
+
+    # ── 2. Build a lookup: model_output text → feedback entry ─────────────
+    all_feedback_entries = feedback_storage.load_all_feedback()
+    feedback_by_output: dict = {}
+    for fb in all_feedback_entries:
+        key = fb.model_output
+        # Keep only the first match per output text (there should only be one)
+        if key not in feedback_by_output:
+            feedback_by_output[key] = fb.model_dump()
+
+    # ── 3. Merge and return ───────────────────────────────────────────────
+    results = []
+    for out in student_outputs:
+        feedback = feedback_by_output.get(out.get("model_output", ""))
+        results.append({
+            "output": out,
+            "feedback": feedback,   # None when no feedback exists yet
+        })
+
+    # Most-recent first
+    results.sort(key=lambda r: r["output"].get("timestamp", ""), reverse=True)
+    return results
+
+
 class AnalysisRequest(BaseModel):
     provider: str = "ollama"
 
