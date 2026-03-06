@@ -1,6 +1,11 @@
-# Root .gitignore for the CV Parser Agent monorepo
+# ============================================================================
+# ROOT GITIGNORE - CV Parser Agent Monorepo
+# Consolidated from all subproject .gitignore files
+# ============================================================================
 
-# --- Python artifacts ---
+# ============================================================================
+# PYTHON
+# ============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -10,63 +15,144 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Virtual environments
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+*.egg-info/
+*.egg
+*.whl
+.installed.cfg
+
+# ============================================================================
+# VIRTUAL ENVIRONMENTS
+# ============================================================================
 .venv/
 venv/
 env/
 ENV/
 
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
-.eggs/
-wheels/
-pip-wheel-metadata/
-
-# Environment variable / secrets
+# ============================================================================
+# ENVIRONMENT VARIABLES / SECRETS
+# ============================================================================
 .env
 .env.*
 .env.local
+.env.*.local
+*.key
+*.pem
 
-# IDEs / editors
+# ============================================================================
+# IDEs / EDITORS
+# ============================================================================
 .vscode/
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo
 *~
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# OS files
+# ============================================================================
+# OS FILES
+# ============================================================================
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# Testing / coverage
+# ============================================================================
+# TESTING / COVERAGE
+# ============================================================================
 .pytest_cache/
 .coverage
 htmlcov/
 
-# Logs
+# ============================================================================
+# TYPE CHECKING / LINTING
+# ============================================================================
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+dmypy.json
+
+# ============================================================================
+# LOGS
+# ============================================================================
 logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Jupyter
+# ============================================================================
+# JUPYTER
+# ============================================================================
 .ipynb_checkpoints/
 
-# Model weights & trained artifacts (ignore large binaries)
+# ============================================================================
+# NODE.JS / FRONTEND
+# ============================================================================
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+
+# ============================================================================
+# DATABASES
+# ============================================================================
+*.db
+*.sqlite
+*.sqlite3
+
+# Neo4j
+neo4j/
+**/neo4j/logs/
+**/neo4j/data/
+neo4j_export.cypher
+**/neo4j_export/**/*.cypher
+neo4j_export/
+
+# ============================================================================
+# MODEL WEIGHTS & TRAINED ARTIFACTS (large binaries)
+# ============================================================================
 **/models/trained/
 **/models/trained/*
+ml-models/
 *.pth
 *.pt
 *.ckpt
 *.onnx
 
-# Data (large datasets / generated content)
+# ============================================================================
+# DATA & GENERATED CONTENT
+# ============================================================================
 data/
 **/cleaned_data/
 **/cleaned_data/*
 **/outputs/
 uploads/
+backend/uploads/
+backend/data/index/
+backend/data/chroma/
+backend/data/faiss/
+backend/output/
 
 # Experiment outputs
 output/
@@ -75,87 +161,23 @@ exported_embeddings/
 embeddings_*.npy
 *.npy
 
-# Neo4j / DB runtime
-neo4j/
-**/neo4j/logs/
-**/neo4j/data/
-
-# Neo4j export files (large .cypher files)
-neo4j_export.cypher
-**/neo4j_export/**/*.cypher
-neo4j_export/
-
-# Sphinx
-_build/
-
-# Workspace
-*.code-workspace
-
-# Python packaging build caches
-*.egg
-*.whl
-
-# Local project files
-.vs/
-
-# Allow small, explicit files if necessary via .gitignore exceptions (add e.g. "!data/small_example.csv")
-
-# Qwen Explainer Output
+# ============================================================================
+# MODEL TRAINING OUTPUTS (Qwen Explainer)
+# ============================================================================
 qwen-explainer-output/
 
+# ============================================================================
+# DOCUMENTATION BUILDS
+# ============================================================================
+_build/
 
+# ============================================================================
+# WORKSPACE FILES
+# ============================================================================
+*.code-workspace
+.vs/
 
-# Nipuni's Gitignore
-
-# ===== Python =====
-__pycache__/
-*.py[cod]
-*.pyd
-*.so
-*.egg-info/
-*.egg
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-htmlcov/
-dist/
-build/
-
-# Virtual environments
-.venv/
-venv/
-ENV/
-env/
-
-# IDE
-.vscode/
-.idea/
-
-# ===== Node / Frontend =====
-node_modules/
-dist/
-.vite/
-*.log
-
-# ===== OS files =====
-.DS_Store
-Thumbs.db
-
-# ===== Env files / secrets =====
-.env
-.env.*
-*.key
-*.pem
-
-# ===== Project runtime folders =====
-backend/uploads/
-backend/data/index/
-backend/data/chroma/
-backend/data/faiss/
-backend/output/
-*.sqlite3
-*.db
-
-# ===== Jupyter =====
-.ipynb_checkpoints/
+# ============================================================================
+# ALLOW EXPLICIT EXCEPTIONS IF NEEDED:
+# !data/small_example.csv
+# ============================================================================
