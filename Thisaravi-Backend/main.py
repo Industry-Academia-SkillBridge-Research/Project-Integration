@@ -19,6 +19,7 @@ from neo4j import GraphDatabase
 from feedback.storage import log_model_output, get_current_prompt_version
 from feedback.schemas import FeedbackEntry
 from feedback import storage as feedback_storage
+from profiles import storage as profile_storage
 
 import threading
 
@@ -230,7 +231,6 @@ Output must be valid JSON with this structure:
 def fetch_linkedin_job(job_id: str) -> dict:
     """
     Fetch a single job from Neo4j by job_id.
-    Falls back to the LinkedIn Scraper API if Neo4j is unavailable.
     """
     # Primary: query Neo4j directly
     try:
@@ -244,26 +244,43 @@ def fetch_linkedin_job(job_id: str) -> dict:
         )
         if rows and rows[0].get("job"):
             return rows[0]["job"]
+        else:
+             raise HTTPException(
+                status_code=404,
+                detail=f"Job not found in Neo4j for job_id='{job_id}'"
+            )
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.warning(f"Neo4j lookup failed for job_id={job_id}: {e}")
-
-    # Fallback: scraper API (if Docker containers are running)
-    url = f"{LINKEDIN_SCRAPER_URL}/api/v1/job/{job_id}"
-    try:
-        resp = http_requests.get(url, timeout=10)
-        resp.raise_for_status()
-        return resp.json()
-    except Exception as e:
+        logger.error(f"Neo4j lookup failed for job_id={job_id}: {e}")
+        # NO FALLBACK
         raise HTTPException(
             status_code=502,
-            detail=f"Job not found in Neo4j or Scraper API for job_id='{job_id}': {e}"
+            detail=f"Error retrieving job from Neo4j for job_id='{job_id}': {e}"
         )
 
 
 def fetch_candidate_profile(candidate_id: str) -> dict:
     """
-    Fetch a candidate profile from the Agent-Runtime API.
+    Fetch a candidate profile from the local JSONL store.
+    Profiles are created/updated via POST /profiles.
+    """
+    profile = profile_storage.get_profile(candidate_id)
+    if profile:
+        logger.info(f"Profile loaded from local store: {candidate_id}")
+        return profile
+    raise HTTPException(
+        status_code=404,
+        detail=f"Candidate profile not found locally for '{candidate_id}'. "
+               f"Create it via POST /profiles first."
+    )
+
+
+def fetch_candidate_profile_remote(candidate_id: str) -> dict:
+    """
+    Fetch a candidate profile from the Agent-Runtime API (external).
     Endpoint: GET /candidates/{candidate_id}
+    Call this explicitly when you need to hit the real service.
     """
     url = f"{AGENT_RUNTIME_URL}/candidates/{candidate_id}"
     try:
@@ -271,10 +288,12 @@ def fetch_candidate_profile(candidate_id: str) -> dict:
         resp.raise_for_status()
         return resp.json()
     except Exception as e:
+        logger.error(f"Agent-Runtime API error for candidate_id='{candidate_id}': {e}")
         raise HTTPException(
             status_code=502,
-            detail=f"Agent-Runtime API error for candidate_id='{candidate_id}': {e}"
+            detail=f"Agent-Runtime API failure for candidate_id='{candidate_id}': {e}"
         )
+
 
 
 def fetch_role_skills(role_key: str, top_n: int = 15) -> List[str]:
@@ -290,8 +309,12 @@ def fetch_role_skills(role_key: str, top_n: int = 15) -> List[str]:
         profile = resp.json()           # RoleSkillProfile
         return [s["name"] for s in profile.get("skills", [])]
     except Exception as e:
-        logger.warning(f"Role-Skill-API unavailable for role_key='{role_key}': {e}")
-        return []  # non-fatal – caller merges with existing skills
+        logger.error(f"Role-Skill-API unavailable for role_key='{role_key}': {e}")
+        # NO FALLBACK - No empty list, raise explicitly.
+        raise HTTPException(
+            status_code=502,
+            detail=f"Role-Skill-API failure for role_key='{role_key}': {e}"
+        )
 
 
 # ── Data mappers ───────────────────────────────────────────────────────────
@@ -1048,6 +1071,54 @@ async def search_jobs(
     except Exception as e:
         logger.error(f"Neo4j search failed: {e}")
         raise HTTPException(status_code=500, detail=f"Neo4j search error: {e}")
+
+
+# --- CANDIDATE PROFILE ENDPOINTS (local JSONL store) ---
+
+@app.get("/profiles")
+async def list_profiles():
+    """List all locally stored candidate profiles."""
+    profiles = profile_storage.list_profiles()
+    return {"profiles": profiles, "count": len(profiles)}
+
+
+@app.get("/profiles/{candidate_id}")
+async def get_profile(candidate_id: str):
+    """Get a single candidate profile from the local store."""
+    profile = profile_storage.get_profile(candidate_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail=f"Profile not found: {candidate_id}")
+    return profile
+
+
+@app.post("/profiles")
+async def create_or_update_profile(profile: CandidateProfile):
+    """
+    Create or update a candidate profile in the local JSONL store.
+    Accepts the same CandidateProfile schema used by inline_candidate.
+    """
+    saved = profile_storage.save_profile(profile.model_dump())
+    return {"status": "ok", "candidate_id": saved["candidate_id"], "profile": saved}
+
+
+@app.delete("/profiles/{candidate_id}")
+async def delete_profile(candidate_id: str):
+    """Delete a candidate profile from the local store."""
+    deleted = profile_storage.delete_profile(candidate_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Profile not found: {candidate_id}")
+    return {"status": "ok", "candidate_id": candidate_id}
+
+
+@app.post("/profiles/{candidate_id}/sync-from-runtime")
+async def sync_profile_from_runtime(candidate_id: str):
+    """
+    Pull a candidate profile from the Agent-Runtime API and save it locally.
+    This is the explicit way to fetch from the external service.
+    """
+    remote = fetch_candidate_profile_remote(candidate_id)
+    saved = profile_storage.save_profile(remote)
+    return {"status": "synced", "candidate_id": candidate_id, "profile": saved}
 
 
 if __name__ == "__main__":
