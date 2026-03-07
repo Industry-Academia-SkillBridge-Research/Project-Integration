@@ -38,6 +38,12 @@ export const ENDPOINTS = {
     ROLES: `${API_BASE}/roles`,
     JOBS_BY_ROLE: (roleKey: string) => `${API_BASE}/jobs-by-role?role_key=${encodeURIComponent(roleKey)}`,
   },
+  PROFILES: {
+    LIST: `${API_BASE}/profiles`,
+    GET: (candidateId: string) => `${API_BASE}/profiles/${encodeURIComponent(candidateId)}`,
+    SAVE: `${API_BASE}/profiles`,
+    DELETE: (candidateId: string) => `${API_BASE}/profiles/${encodeURIComponent(candidateId)}`,
+  },
 } as const;
 
 export const MODEL_PROVIDERS = [

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useState as useCollapseState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,8 +25,9 @@ import PageHeader from '@/components/layout/PageHeader';
 import SourceModeForm from '@/components/analysis/SourceModeForm';
 import StreamingOutput from '@/components/analysis/StreamingOutput';
 import ResultsDashboard from '@/components/analysis/ResultsDashboard';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAuth } from '@/context/AuthContext';
-import { UserCircle, Briefcase, MapPin, Building2, Loader2 } from 'lucide-react';
+import { UserCircle, Briefcase, MapPin, Building2, Loader2, ChevronDown } from 'lucide-react';
 
 export interface AnalysisFormValues {
   target_role: string;
@@ -88,8 +89,8 @@ export default function AnalysisPage() {
     startStream((signal) => generateProjectFromSources(request, signal));
   };
 
-  const showStream = isStreaming || (streamingText && !parsedResult);
-  const showResults = parsedResult && !isStreaming;
+  const showStream = isStreaming || (!!streamingText && !parsedResult);
+  const showResults = !!parsedResult && !isStreaming;
 
   return (
     <div>
@@ -350,10 +351,36 @@ export default function AnalysisPage() {
       )}
 
       {showResults && (
-        <div className="mt-6">
-          <ResultsDashboard result={parsedResult} />
+        <div className="mt-6 space-y-4">
+          <ResultsDashboard result={parsedResult!} />
+
+          {/* Collapsible raw output so users can always inspect the full model response */}
+          {streamingText && (
+            <RawOutputCollapsible text={streamingText} />
+          )}
         </div>
       )}
     </div>
+  );
+}
+
+function RawOutputCollapsible({ text }: { text: string }) {
+  const [open, setOpen] = useCollapseState(false);
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger asChild>
+        <button className="flex w-full items-center justify-between rounded-md border bg-muted/30 px-4 py-2.5 text-sm font-medium hover:bg-muted/50 transition-colors">
+          Full Model Output
+          <ChevronDown
+            className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          />
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="mt-1">
+          <StreamingOutput text={text} isStreaming={false} />
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

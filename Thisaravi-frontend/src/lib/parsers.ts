@@ -46,15 +46,23 @@ export function parseStructuredText(text: string): AnalysisResult {
 
     const rawStack = stackMatch ? stackMatch[1].trim() : '';
     const techStack = rawStack
-      .split(/,|and|\n|-|\*|;/)
-      .map((s) => s.trim())
+      // Split only on commas, "and", semicolons, or a newline followed by a bullet/dash
+      // Do NOT split on bare "-" — that breaks hyphenated tech names like "CI/CD"
+      .split(/,|;|\band\b|\n\s*[-*]\s*/)
+      .map((s) => s.replace(/^[-*\s]+/, '').trim())
       .filter(Boolean);
 
     const rawSteps = stepsMatch ? stepsMatch[1].trim() : '';
-    const steps = rawSteps
-      .split(/\d+\.|-|\*/)
-      .map((s) => s.trim())
-      .filter(Boolean);
+    // Only split on actual list markers at the start of a line:
+    //   - "1." / "1)" / "1:" followed by whitespace
+    //   - "Step N" variants
+    //   - "- " or "* " (dash/bullet followed by a space — NOT bare "-" inside words)
+    // This prevents fragmentation of hyphenated words like "domain-specific".
+    const stepsNormalized = rawSteps.replace(/\r\n/g, '\n');
+    const steps = stepsNormalized
+      .split(/\n\s*(?:\d+[.):\s]\s+|Step\s+\d+[.:)?\s]\s*|[-*]\s+)/)
+      .map((s) => s.replace(/^(?:Step\s*)?\d+[.):\s]\s*/i, '').trim())
+      .filter((s) => s.length > 5);
 
     return {
       gap_analysis: {
@@ -83,7 +91,14 @@ export function parseResponse(text: string): AnalysisResult {
   // 1. Try JSON first (generic models)
   const jsonData = extractJson(text);
   if (jsonData && 'gap_analysis' in jsonData) {
-    return jsonData as unknown as AnalysisResult;
+    const result = jsonData as unknown as AnalysisResult;
+    // Coerce match_percentage to a number — some models return "85%" or "85"
+    const raw = (result.gap_analysis as Record<string, unknown>).match_percentage;
+    if (typeof raw !== 'number') {
+      (result.gap_analysis as Record<string, unknown>).match_percentage =
+        parseInt(String(raw).replace(/[^\d]/g, ''), 10) || 0;
+    }
+    return result;
   }
 
   // 2. Try structured text parsing (fine-tuned model)

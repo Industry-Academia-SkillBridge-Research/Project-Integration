@@ -462,81 +462,114 @@ async def run_gemini(request: ProjectRequest):
     """
     Executes logic using Google's Gemini Flash model (Latest).
     Yields raw text chunks for streaming.
+
+    generate_content_stream is a synchronous blocking iterator — run it in a
+    thread pool so the asyncio event loop stays free and chunks are flushed to
+    the client in real-time.
     """
-    try:
-        if not gemini_client:
-            yield "Error: Gemini API key not configured"
-            return
+    import asyncio
 
-        # Unified Prompt
-        user_prompt = construct_analysis_prompt(request, SYSTEM_PROMPT)
+    if not gemini_client:
+        yield "Error: Gemini API key not configured"
+        return
 
-        response = gemini_client.models.generate_content_stream(
-            model=GEMINI_MODEL_ID,
-            contents=user_prompt,
-        )
-        
-        for chunk in response:
-            if chunk.text:
-                yield chunk.text
+    user_prompt = construct_analysis_prompt(request, SYSTEM_PROMPT)
+    loop = asyncio.get_event_loop()
+    queue: asyncio.Queue = asyncio.Queue()
 
-    except Exception as e:
-        logger.error(f"Gemini Error: {e}")
-        yield f"Error: {str(e)}"
+    def _stream():
+        try:
+            response = gemini_client.models.generate_content_stream(
+                model=GEMINI_MODEL_ID,
+                contents=user_prompt,
+            )
+            for chunk in response:
+                if chunk.text:
+                    loop.call_soon_threadsafe(queue.put_nowait, chunk.text)
+        except Exception as e:
+            logger.error(f"Gemini Error: {e}")
+            loop.call_soon_threadsafe(queue.put_nowait, f"Error: {str(e)}")
+        finally:
+            loop.call_soon_threadsafe(queue.put_nowait, None)  # sentinel
+
+    t = threading.Thread(target=_stream, daemon=True)
+    t.start()
+    while True:
+        chunk = await queue.get()
+        if chunk is None:
+            break
+        yield chunk
 
 
 async def run_ollama(request: ProjectRequest):
     """
     Executes logic using Ollama (Fine-tuned or Generic).
     Yields raw text chunks for streaming.
+
+    ollama.chat(stream=True) is a synchronous blocking iterator — run it in a
+    thread pool so the asyncio event loop stays free and each token is flushed
+    to the client immediately as it is generated.
     """
-    try:
-        # Determine model to use
-        if request.model_provider == "ollama_generic":
-             model_id = request.ollama_model or DEFAULT_OLLAMA_GENERIC
-        else:
-             # Default to fine-tuned
-             model_id = request.ollama_model or DEFAULT_OLLAMA_FINE_TUNED
+    import asyncio
 
-        is_finetuned_logic = (model_id == DEFAULT_OLLAMA_FINE_TUNED)
-        
-        # Prepare Prompt based on Model Type
-        if is_finetuned_logic:
-            # Fine-tuned models expect specific compact input structure matching training data
-            input_json = {
-                "student_data": {
-                    "demographics": f"{request.student_data.name}, {request.student_data.current_role}",
-                    "major": request.student_data.major,
-                    "interests": request.student_data.interests,
-                    "current_skills": request.student_data.skills,
-                    "personality": request.student_data.personality
-                },
-                "job_data": {
-                    "target_job_role": request.target_role,
-                    "required_skills": request.job_data.required_skills,
-                    "description": request.job_data.description_summary
-                }
+    # Determine model to use
+    if request.model_provider == "ollama_generic":
+        model_id = request.ollama_model or DEFAULT_OLLAMA_GENERIC
+    else:
+        # Default to fine-tuned
+        model_id = request.ollama_model or DEFAULT_OLLAMA_FINE_TUNED
+
+    is_finetuned_logic = (model_id == DEFAULT_OLLAMA_FINE_TUNED)
+
+    # Prepare Prompt based on Model Type
+    if is_finetuned_logic:
+        # Fine-tuned models expect specific compact input structure matching training data
+        input_json = {
+            "student_data": {
+                "demographics": f"{request.student_data.name}, {request.student_data.current_role}",
+                "major": request.student_data.major,
+                "interests": request.student_data.interests,
+                "current_skills": request.student_data.skills,
+                "personality": request.student_data.personality
+            },
+            "job_data": {
+                "target_job_role": request.target_role,
+                "required_skills": request.job_data.required_skills,
+                "description": request.job_data.description_summary
             }
-            prompt = json.dumps(input_json)
-        else:
-            # Generic models now use the SAME prompt logic as Gemini
-            prompt = construct_analysis_prompt(request, SYSTEM_PROMPT)
+        }
+        prompt = json.dumps(input_json)
+    else:
+        # Generic models use the same prompt structure as Gemini
+        prompt = construct_analysis_prompt(request, SYSTEM_PROMPT)
 
-        # Stream from Ollama
-        stream = ollama.chat(
-            model=model_id,
-            messages=[{'role': 'user', 'content': prompt}],
-            stream=True,
-            options={"temperature": 1.0} 
-        )
+    loop = asyncio.get_event_loop()
+    queue: asyncio.Queue = asyncio.Queue()
 
-        for chunk in stream:
-            content = chunk['message']['content']
-            yield content
+    def _stream():
+        try:
+            stream = ollama.chat(
+                model=model_id,
+                messages=[{'role': 'user', 'content': prompt}],
+                stream=True,
+                options={"temperature": 1.0},
+            )
+            for chunk in stream:
+                content = chunk['message']['content']
+                loop.call_soon_threadsafe(queue.put_nowait, content)
+        except Exception as e:
+            logger.error(f"Ollama Error: {e}")
+            loop.call_soon_threadsafe(queue.put_nowait, f"Error: {str(e)}")
+        finally:
+            loop.call_soon_threadsafe(queue.put_nowait, None)  # sentinel
 
-    except Exception as e:
-        logger.error(f"Ollama Error: {e}")
-        yield f"Error: {str(e)}"
+    t = threading.Thread(target=_stream, daemon=True)
+    t.start()
+    while True:
+        chunk = await queue.get()
+        if chunk is None:
+            break
+        yield chunk
 
 
 # --- API ENDPOINTS ---
@@ -558,7 +591,14 @@ async def generate_project(request: ProjectRequest):
 
     # Wrap with logging to capture output for feedback
     logged_generator = logging_wrapper(generator, input_data, request.model_provider)
-    return StreamingResponse(logged_generator, media_type="text/plain")
+    return StreamingResponse(
+        logged_generator,
+        media_type="text/plain",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",  # disable nginx/proxy buffering
+        },
+    )
 
 
 @app.post("/generate-project-from-sources")

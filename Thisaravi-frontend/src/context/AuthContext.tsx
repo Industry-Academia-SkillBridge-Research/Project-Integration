@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { saveBackendProfile, fetchBackendProfile, mergeBackendProfile } from '@/services/profileService';
 
 export type UserType = 'student' | 'expert';
 
@@ -114,6 +115,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       joinedAt: newAccount.joinedAt,
     };
     persistUser(newUser);
+    // Sync the new profile to the backend JSONL store (best-effort)
+    saveBackendProfile(newUser).catch(err =>
+      console.warn('[profile sync] register failed:', err),
+    );
   }, [persistUser]);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -139,6 +144,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       joinedAt: account.joinedAt,
     };
     persistUser(loggedInUser);
+    // Pull any enriched profile data from the backend JSONL store (best-effort)
+    fetchBackendProfile(loggedInUser.id)
+      .then(backend => {
+        if (backend) {
+          const merged = mergeBackendProfile(loggedInUser, backend);
+          persistUser(merged);
+          // Keep the stored account in sync too
+          const fresh = getAccounts();
+          const i = fresh.findIndex(a => a.id === merged.id);
+          if (i !== -1) {
+            fresh[i] = {
+              ...fresh[i],
+              current_role: merged.current_role,
+              major: merged.major,
+              interests: merged.interests,
+              personality: merged.personality,
+              skills: merged.skills,
+            };
+            saveAccounts(fresh);
+          }
+        }
+      })
+      .catch(err => console.warn('[profile sync] login fetch failed:', err));
   }, [persistUser]);
 
   const logout = useCallback(() => {
@@ -155,6 +183,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     const updated: User = { ...user, ...data };
     persistUser(updated);
+    // Sync updated profile to backend JSONL store (best-effort)
+    saveBackendProfile(updated).catch(err =>
+      console.warn('[profile sync] updateProfile failed:', err),
+    );
   }, [user, persistUser]);
 
   // Keep in-memory user in sync if storage changes in another tab
