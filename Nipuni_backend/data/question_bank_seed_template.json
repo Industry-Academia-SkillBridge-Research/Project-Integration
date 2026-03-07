@@ -1,0 +1,137 @@
+[
+  {
+    "skill_name": "Python Programming",
+    "difficulty": "easy",
+    "question": "What is a list comprehension in Python?",
+    "options": [
+      "A way to create lists using a single line of code with iteration",
+      "A method to sort lists alphabetically",
+      "A function to filter lists based on conditions",
+      "A technique to reverse lists"
+    ],
+    "answer": "A",
+    "explanation": "List comprehensions provide a concise way to create lists in Python using a single line of code with the syntax [expression for item in iterable if condition].",
+    "model": "llama3.1:8b",
+    "created_at": "2026-03-02T10:30:00"
+  },
+  {
+    "skill_name": "Python Programming",
+    "difficulty": "medium",
+    "question": "What is the output of the following code: [x**2 for x in range(3)]?",
+    "options": [
+      "[0, 1, 2]",
+      "[0, 1, 4]",
+      "[1, 4, 9]",
+      "[0, 2, 4]"
+    ],
+    "answer": "B",
+    "explanation": "The list comprehension squares each number from 0 to 2: 0²=0, 1²=1, 2²=4, resulting in [0, 1, 4].",
+    "model": "llama3.1:8b",
+    "created_at": "2026-03-02T10:31:00"
+  },
+  {
+    "skill_name": "Python Programming",
+    "difficulty": "hard",
+    "question": "What is a decorator in Python?",
+    "options": [
+      "A function that takes another function as an argument and extends its behavior without modifying it",
+      "A way to add comments to code",
+      "A method to style output text",
+      "A type of loop construct"
+    ],
+    "answer": "A",
+    "explanation": "Decorators are functions that modify the behavior of other functions or methods. They use the @decorator_name syntax and are commonly used for logging, timing, access control, and caching.",
+    "model": "llama3.1:8b",
+    "created_at": "2026-03-02T10:32:00"
+  },
+  {
+    "skill_name": "SQL Databases",
+    "difficulty": "easy",
+    "question": "What SQL command is used to retrieve data from a database?",
+    "options": [
+      "GET",
+      "SELECT",
+      "FETCH",
+      "RETRIEVE"
+    ],
+    "answer": "B",
+    "explanation": "The SELECT statement is the fundamental SQL command used to query and retrieve data from database tables. Syntax: SELECT column1, column2 FROM table_name;",
+    "model": "llama3.1:8b",
+    "created_at": "2026-03-02T10:33:00"
+  },
+  {
+    "skill_name": "SQL Databases",
+    "difficulty": "medium",
+    "question": "Which SQL clause is used to filter results based on a condition?",
+    "options": [
+      "FILTER",
+      "CONDITION",
+      "WHERE",
+      "HAVING"
+    ],
+    "answer": "C",
+    "explanation": "The WHERE clause is used to filter records based on specified conditions. It comes after the FROM clause in a SELECT statement. HAVING is used to filter grouped results.",
+    "model": "llama3.1:8b",
+    "created_at": "2026-03-02T10:34:00"
+  },
+  {
+    "skill_name": "SQL Databases",
+    "difficulty": "hard",
+    "question": "What is the difference between INNER JOIN and LEFT JOIN?",
+    "options": [
+      "INNER JOIN returns all rows from both tables; LEFT JOIN returns only matching rows",
+      "INNER JOIN returns only matching rows; LEFT JOIN returns all rows from the left table plus matching rows from the right",
+      "They are the same, just different syntax",
+      "INNER JOIN is faster but produces the same result as LEFT JOIN"
+    ],
+    "answer": "B",
+    "explanation": "INNER JOIN returns only rows where there is a match in both tables. LEFT JOIN (or LEFT OUTER JOIN) returns all rows from the left table and matching rows from the right table, with NULLs for non-matching right table columns.",
+    "model": "llama3.1:8b",
+    "created_at": "2026-03-02T10:35:00"
+  },
+  {
+    "skill_name": "Linux Administration",
+    "difficulty": "easy",
+    "question": "Which command is used to list files and directories in Linux?",
+    "options": [
+      "dir",
+      "list",
+      "ls",
+      "show"
+    ],
+    "answer": "C",
+    "explanation": "The 'ls' command is used to list directory contents in Linux and Unix systems. Common options include ls -l (long format), ls -a (show hidden files), and ls -lh (human-readable sizes).",
+    "model": "llama3.1:8b",
+    "created_at": "2026-03-02T10:36:00"
+  },
+  {
+    "skill_name": "Linux Administration",
+    "difficulty": "medium",
+    "question": "How do you change file permissions to make a file executable in Linux?",
+    "options": [
+      "chmod +x filename",
+      "chown +x filename",
+      "exec filename",
+      "permission filename +x"
+    ],
+    "answer": "A",
+    "explanation": "The chmod (change mode) command modifies file permissions. The +x flag adds execute permission. Example: chmod +x script.sh makes the script executable.",
+    "model": "llama3.1:8b",
+    "created_at": "2026-03-02T10:37:00"
+  },
+  {
+    "skill_name": "Linux Administration",
+    "difficulty": "hard",
+    "question": "What does the command 'grep -r pattern /path' do?",
+    "options": [
+      "Searches for 'pattern' only in files in /path directory",
+      "Recursively searches for 'pattern' in /path and all subdirectories",
+      "Removes all occurrences of 'pattern' from files in /path",
+      "Replaces 'pattern' with /path in all files"
+    ],
+    "answer": "B",
+    "explanation": "The grep command with -r (recursive) flag searches for a pattern in all files within the specified directory and all its subdirectories. It's commonly used to find text across multiple files in a project.",
+    "model": "llama3.1:8b",
+    "created_at": "2026-03-02T10:38:00"
+  }
+]

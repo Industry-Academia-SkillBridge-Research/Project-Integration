@@ -1,0 +1,49 @@
+skill_name,category,skill_id
+Python,Programming Languages,PYTHON
+Java,Programming Languages,JAVA
+C Programming,Programming Languages,C
+C++,Programming Languages,CPLUSPLUS
+JavaScript,Programming Languages,JAVASCRIPT
+TypeScript,Programming Languages,TYPESCRIPT
+R Programming,Programming Languages,R
+PHP,Programming Languages,PHP
+SQL,Databases,SQL
+MySQL,Databases,MYSQL
+PostgreSQL,Databases,POSTGRESQL
+MongoDB,Databases,MONGODB
+NoSQL,Databases,NOSQL
+OLAP,Databases,OLAP
+HTML,Web Development,HTML
+CSS,Web Development,CSS
+Angular,Web Development,ANGULAR
+REST API,Web Development,RESTAPI
+AWS,Cloud & DevOps,AWS
+Google Cloud,Cloud & DevOps,GCP
+CI/CD,Cloud & DevOps,CICD
+Git,Cloud & DevOps,GIT
+Linux,Operating Systems,LINUX
+Windows,Operating Systems,WINDOWS
+Pandas,Data Science & Analytics,PANDAS
+NumPy,Data Science & Analytics,NUMPY
+Power BI,Data Science & Analytics,POWERBI
+Tableau,Data Science & Analytics,TABLEAU
+ETL,Data Science & Analytics,ETL
+Apache Spark,Big Data & Distributed Systems,SPARK
+Hadoop,Big Data & Distributed Systems,HADOOP
+Apache Kafka,Big Data & Distributed Systems,KAFKA
+Machine Learning,AI & Machine Learning,ML
+Deep Learning,AI & Machine Learning,DL
+TensorFlow,AI & Machine Learning,TENSORFLOW
+PyTorch,AI & Machine Learning,PYTORCH
+Computer Vision,AI & Machine Learning,CV
+Natural Language Processing,AI & Machine Learning,NLP
+Object-Oriented Programming,Software Engineering,OOP
+UML,Software Engineering,UML
+Agile,Software Engineering,AGILE
+Scrum,Software Engineering,SCRUM
+Unit Testing,Software Engineering,UNITTEST
+TCP/IP,Networking,TCPIP
+Routing,Networking,ROUTING
+VLAN,Networking,VLAN
+Security,Security & Compliance,SECURITY
+Android,Mobile Development,ANDROID

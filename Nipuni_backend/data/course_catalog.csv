@@ -1,0 +1,30 @@
+course_code,course_name,main_skill,course_level
+IT1030,Mathematics for Computing,Mathematics & Logical Thinking,Beginner/Intermediate
+IT1020,Introduction to Computer Systems,Computer Systems & Networking,Beginner/Intermediate
+IT1010,Introduction to Programming,Programming Fundamentals & C Language,Beginner
+IT1100,Internet and Web Technologies,Web Development & Internet Technologies,Beginner/Intermediate
+IT1090,Information Systems and Data Modeling,Information Systems & Database Design,Beginner/Intermediate
+IT1080,English for Academic Purposes,Academic Communication Skills,Beginner
+IT1050,Object Oriented Concepts,Object-Oriented Design & Programming,Beginner/Intermediate
+IT1090,Information Systems and Data Modeling,Information Systems & Database Design,Beginner/Intermediate
+IT1060,Software Process Modeling,Software Development Processes,Beginner/Intermediate
+IT2060,Operating Systems and System Administration,Operating Systems & System Administration,Intermediate
+IT2050,Computer Networks,Networking & Protocol Management,Intermediate
+IT2040,Database Management Systems,Database Design & Administration,Intermediate
+IT2030,Object Oriented Programming,Java & Object-Oriented Application Development,Intermediate
+IT2020,Software Engineering,Software Development & Engineering Practices,Intermediate
+IT2110,Probability & Statistics,Statistical Analysis & Data Interpretation,Intermediate
+IT2100,Employability Skills Development Seminar,Employability & Workplace Readiness,Beginner
+IT2090,Professional Skills,Professionalism & Workplace Readiness,Beginner
+IT2080,Information Technology Project,IT Project Management & Execution,Intermediate
+IT2070,Data Structures and Algorithms,Problem Solving & Algorithm Development,Intermediate
+IT2010,Mobile Application Development,Mobile Application Design & Development,Intermediate
+IT3050,Employability Skills Development Seminar,Employability & Workplace Readiness,Beginner
+IT3030,Programming Applications and Frameworks,Full-Stack Web Application Development,Advanced
+IT3071,Machine Learning and Optimization Methods,Machine Learning & Optimization,Advanced
+IT3031,Database Systems and Data-Driven Application,Advanced Database Design & Management,Advanced
+IT3021,Data Warehousing and Business Intelligence,Data Engineering & BI Analytics,Advanced
+IT3011,Theory and Practices in Statistical Modeling,Statistical Modeling & Data Analysis,Advanced
+IT3041,Information Retrieval and Web Analytics,Information Retrieval & Web Analytics,Advanced
+IT4041,Introduction to Information Security Analytics,Information Security Analytics,Advanced
+IT4011,Database Administration and Storage Systems,Database Administration & Storage,Advanced

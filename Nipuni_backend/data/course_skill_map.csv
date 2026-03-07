@@ -1,0 +1,121 @@
+course_code,skill_name,map_weight
+IT1010,C Programming,0.5
+IT1010,Linux,0.2
+IT1010,Unit Testing,0.15
+IT1010,Git,0.1
+IT1010,CI/CD,0.05
+IT1020,TCP/IP,0.3
+IT1020,Routing,0.2
+IT1020,Linux,0.2
+IT1020,Windows,0.2
+IT1020,VLAN,0.1
+IT1030,Machine Learning,0.3
+IT1030,Deep Learning,0.2
+IT1030,R Programming,0.2
+IT1030,Python,0.15
+IT1030,Computer Vision,0.15
+IT1100,HTML,0.25
+IT1100,JavaScript,0.25
+IT1100,CSS,0.2
+IT1100,Security,0.15
+IT1100,PHP,0.15
+IT1090,SQL,0.35
+IT1090,UML,0.2
+IT1090,MySQL,0.15
+IT1090,PostgreSQL,0.15
+IT1090,OLAP,0.15
+IT1050,Object-Oriented Programming,0.35
+IT1050,C++,0.3
+IT1050,UML,0.15
+IT1050,Unit Testing,0.1
+IT1050,Git,0.1
+IT1060,UML,0.25
+IT1060,Agile,0.25
+IT1060,Unit Testing,0.2
+IT1060,Git,0.15
+IT1060,Scrum,0.15
+IT2060,Linux,0.45
+IT2060,Security,0.2
+IT2060,TCP/IP,0.15
+IT2060,CI/CD,0.1
+IT2060,Windows,0.1
+IT2050,TCP/IP,0.35
+IT2050,Routing,0.25
+IT2050,VLAN,0.2
+IT2050,Security,0.15
+IT2050,Linux,0.05
+IT2040,SQL,0.35
+IT2040,Security,0.2
+IT2040,MySQL,0.15
+IT2040,PostgreSQL,0.15
+IT2040,Java,0.15
+IT2030,Java,0.5
+IT2030,Object-Oriented Programming,0.2
+IT2030,Unit Testing,0.1
+IT2030,Git,0.1
+IT2030,Linux,0.1
+IT2020,UML,0.3
+IT2020,Unit Testing,0.2
+IT2020,Object-Oriented Programming,0.2
+IT2020,Git,0.15
+IT2020,Agile,0.15
+IT2110,R Programming,0.4
+IT2110,Machine Learning,0.2
+IT2110,NumPy,0.15
+IT2110,Pandas,0.15
+IT2110,Power BI,0.1
+IT2070,Java,0.25
+IT2070,Object-Oriented Programming,0.2
+IT2070,Python,0.2
+IT2070,C++,0.2
+IT2070,Git,0.15
+IT2010,Android,0.35
+IT2010,Java,0.25
+IT2010,REST API,0.15
+IT2010,Security,0.15
+IT2010,SQL,0.1
+IT3030,Java,0.25
+IT3030,REST API,0.2
+IT3030,JavaScript,0.2
+IT3030,Angular,0.2
+IT3030,TypeScript,0.15
+IT3071,Machine Learning,0.25
+IT3071,Deep Learning,0.25
+IT3071,Python,0.2
+IT3071,TensorFlow,0.15
+IT3071,PyTorch,0.15
+IT3031,SQL,0.3
+IT3031,NoSQL,0.2
+IT3031,Security,0.2
+IT3031,PostgreSQL,0.15
+IT3031,MongoDB,0.15
+IT3011,R Programming,0.35
+IT3011,Machine Learning,0.2
+IT3011,NumPy,0.15
+IT3011,Pandas,0.15
+IT3011,Power BI,0.15
+IT3041,Natural Language Processing,0.3
+IT3041,Python,0.2
+IT3041,Machine Learning,0.2
+IT3041,SQL,0.15
+IT3041,Power BI,0.15
+IT4041,Security,0.4
+IT4041,Python,0.2
+IT4041,Machine Learning,0.2
+IT4041,SQL,0.1
+IT4041,Power BI,0.1
+IT4011,Security,0.25
+IT4011,SQL,0.25
+IT4011,AWS,0.2
+IT4011,Google Cloud,0.15
+IT4011,PostgreSQL,0.15
+IT4031,Power BI,0.3
+IT4031,Tableau,0.25
+IT4031,JavaScript,0.2
+IT4031,HTML,0.15
+IT4031,CSS,0.1
+IT4021,Apache Spark,0.25
+IT4021,Apache Kafka,0.2
+IT4021,Hadoop,0.2
+IT4021,AWS,0.2
+IT4021,ETL,0.15

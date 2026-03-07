@@ -1,0 +1,66 @@
+JobSkillID,JobSkillName,Category,Aliases
+PYTHON,Python,Programming Language,"Python,Py"
+JAVA,Java,Programming Language,Java
+JAVASCRIPT,JavaScript,Programming Language,"JavaScript,JS,Node"
+TYPESCRIPT,TypeScript,Programming Language,"TypeScript,TS"
+CPLUSPLUS,C++,Programming Language,"C++,Cpp"
+C,C Programming,Programming Language,"C Language,C,Procedural"
+CSHARP,C#,Programming Language,"C#,C Sharp"
+PHP,PHP,Programming Language,PHP
+SCALA,Scala,Programming Language,Scala
+R,R Programming,Programming Language,R Statistical
+SQL,SQL,Database,"SQL,Structured Query,Database Management"
+NOSQL,NoSQL,Database,"NoSQL,MongoDB,Document Database"
+POSTGRESQL,PostgreSQL,Database,"PostgreSQL,Postgres"
+MYSQL,MySQL,Database,MySQL
+MONGODB,MongoDB,Database,MongoDB
+REDIS,Redis,Database,Redis
+HTML,HTML,Web Development,"HTML,Markup"
+CSS,CSS,Web Development,"CSS,Styling"
+REACT,React,Web Development,"React,React.js"
+ANGULAR,Angular,Web Development,"Angular,AngularJS"
+VUE,Vue.js,Web Development,Vue
+RESTAPI,REST API,Web Development,"REST,RESTful,API"
+GRAPHQL,GraphQL,Web Development,GraphQL
+GIT,Git,DevOps,"Git,Version Control"
+DOCKER,Docker,DevOps,"Docker,Container"
+KUBERNETES,Kubernetes,DevOps,"Kubernetes,K8s,Orchestration"
+CICD,CI/CD,DevOps,"CI/CD,Jenkins,Pipeline"
+AWS,AWS,Cloud,"AWS,Amazon Web Services"
+AZURE,Azure,Cloud,"Azure,Microsoft Azure"
+GCP,Google Cloud,Cloud,"GCP,Google Cloud Platform"
+TERRAFORM,Terraform,DevOps,"Terraform,IaC"
+ANSIBLE,Ansible,DevOps,"Ansible,Configuration"
+LINUX,Linux,Operating System,"Linux,Unix"
+WINDOWS,Windows,Operating System,Windows
+PANDAS,Pandas,Data Science,"Pandas,DataFrame"
+NUMPY,NumPy,Data Science,"NumPy,Numerical"
+ETL,ETL,Data Engineering,"ETL,Extract Transform Load"
+SPARK,Apache Spark,Data Engineering,"Spark,PySpark"
+HADOOP,Hadoop,Data Engineering,Hadoop
+KAFKA,Apache Kafka,Data Engineering,"Kafka,Streaming"
+AIRFLOW,Apache Airflow,Data Engineering,"Airflow,Workflow"
+MACHINELEARNING,Machine Learning,AI/ML,"Machine Learning,ML"
+DEEPLEARNING,Deep Learning,AI/ML,"Deep Learning,Neural Network"
+TENSORFLOW,TensorFlow,AI/ML,TensorFlow
+PYTORCH,PyTorch,AI/ML,PyTorch
+NLP,Natural Language Processing,AI/ML,"NLP,Text Processing"
+COMPUTERVISION,Computer Vision,AI/ML,"Computer Vision,Image Processing"
+AGILE,Agile,Methodology,Agile
+SCRUM,Scrum,Methodology,Scrum
+UML,UML,Methodology,"UML,Modeling"
+OOP,Object-Oriented Programming,Methodology,"OOP,Object-Oriented"
+ANDROID,Android,Mobile Development,Android
+IOS,iOS,Mobile Development,"iOS,iPhone"
+REACTNATIVE,React Native,Mobile Development,React Native
+UNITTESTING,Unit Testing,Testing,"Unit Test,Testing"
+PYTEST,Pytest,Testing,Pytest
+JUNIT,JUnit,Testing,JUnit
+POWERBI,Power BI,Business Intelligence,"Power BI,PowerBI"
+TABLEAU,Tableau,Business Intelligence,Tableau
+OLAP,OLAP,Business Intelligence,"OLAP,Cube"
+TCPIP,TCP/IP,Networking,"TCP/IP,Networking"
+ROUTING,Routing,Networking,"Routing,Router"
+VLAN,VLAN,Networking,VLAN
+SECURITY,Security,Security,"Security,Cyber"
+ENCRYPTION,Encryption,Security,Encryption
