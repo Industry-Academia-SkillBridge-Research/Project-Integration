@@ -26,12 +26,18 @@ SKILL_ALIASES = {
     "python2": "Python",
     "py": "Python",
     "js": "JavaScript",
+    "javascript": "JavaScript",
     "typescript": "TypeScript",
     "ts": "TypeScript",
     "c++": "C++",
     "cpp": "C++",
+    "cplusplus": "C++",
     "c#": "C#",
     "csharp": "C#",
+    "c sharp": "C#",
+    "c/c++": "C++",
+    "r": "R",
+    "rlang": "R",
     
     # Machine Learning / AI
     "ml": "Machine Learning",
@@ -96,6 +102,23 @@ SKILL_ALIASES = {
     "gitlab": "GitLab",
     "jira": "Jira",
     "confluence": "Confluence",
+    "figma": "Figma",
+    "sketch": "Sketch",
+    "adobe xd": "Adobe XD",
+    "invision": "InVision",
+    "postman": "Postman",
+    "insomnia": "Insomnia",
+    "android studio": "Android Studio",
+    "androidstudio": "Android Studio",
+    "visual studio": "Visual Studio",
+    "visual studio code": "Visual Studio Code",
+    "vs code": "Visual Studio Code",
+    "vscode": "Visual Studio Code",
+    "intellij": "IntelliJ IDEA",
+    "intellij idea": "IntelliJ IDEA",
+    "pycharm": "PyCharm",
+    "eclipse": "Eclipse",
+    "jupyter": "Jupyter Notebook",
     
     # Business Intelligence & Analytics Tools
     "power bi": "Power BI",
@@ -116,6 +139,8 @@ SKILL_ALIASES = {
     "google sheets": "Google Sheets",
     "data studio": "Google Data Studio",
     "google data studio": "Google Data Studio",
+    "business intelligence": "Business Intelligence",
+    "bi": "Business Intelligence",
     
     # Data Engineering & Big Data
     "apache spark": "Apache Spark",
@@ -134,6 +159,11 @@ SKILL_ALIASES = {
     "google bigquery": "BigQuery",
     "hive": "Apache Hive",
     "apache hive": "Apache Hive",
+    "elasticsearch": "Elasticsearch",
+    "elastic search": "Elasticsearch",
+    "elastic": "Elasticsearch",
+    "kibana": "Kibana",
+    "logstash": "Logstash",
     
     # Statistical & Data Science Tools
     "r": "R",
@@ -154,6 +184,32 @@ SKILL_ALIASES = {
     "matplotlib": "Matplotlib",
     "seaborn": "Seaborn",
     "plotly": "Plotly",
+    "jupyter": "Jupyter Notebook",
+    "jupyter notebook": "Jupyter Notebook",
+    "jupyter lab": "JupyterLab",
+    "jupyterlab": "JupyterLab",
+    "streamlit": "Streamlit",
+    "dash": "Plotly Dash",
+    "plotly dash": "Plotly Dash",
+    "prophet": "Prophet",
+    "facebook prophet": "Prophet",
+    "xgboost": "XGBoost",
+    "lightgbm": "LightGBM",
+    "catboost": "CatBoost",
+    
+    # Data Science & Analytics (concepts)
+    "data science": "Data Science",
+    "data analysis": "Data Analysis",
+    "data analytics": "Data Analytics",
+    "business analytics": "Business Analytics",
+    "statistical analysis": "Statistical Analysis",
+    "quantitative analysis": "Quantitative Analysis",
+    "predictive modeling": "Predictive Modeling",
+    "predictive analytics": "Predictive Analytics",
+    "data modeling": "Data Modeling",
+    "data modelling": "Data Modeling",
+    "reporting": "Reporting",
+    "analytics": "Analytics",
     
     # Web Technologies
     "html": "HTML",
@@ -167,6 +223,12 @@ SKILL_ALIASES = {
     "tailwind": "Tailwind CSS",
     "tailwindcss": "Tailwind CSS",
     "tailwind css": "Tailwind CSS",
+    "jquery": "jQuery",
+    "ajax": "Ajax",
+    "xml": "XML",
+    "json": "JSON",
+    "yaml": "YAML",
+    "markdown": "Markdown",
     
     # Backend Technologies
     "nodejs": "Node.js",
@@ -263,6 +325,38 @@ SKILL_CATEGORIES = {
     "FastAPI": "Web Framework",
     "Express.js": "Web Framework",
     "Node.js": "Runtime",
+    "Spring Boot": "Web Framework",
+    
+    # Data Science & Analytics
+    "Data Science": "Data Science",
+    "Data Analysis": "Data Science",
+    "Data Analytics": "Data Science",
+    "Business Analytics": "Data Science",
+    "Statistical Analysis": "Data Science",
+    "Predictive Analytics": "Data Science",
+    "Predictive Modeling": "Data Science",
+    "Jupyter Notebook": "Data Science Tool",
+    "JupyterLab": "Data Science Tool",
+    "Streamlit": "Data Science Tool",
+    "Pandas": "Data Science Library",
+    "NumPy": "Data Science Library",
+    "Scikit-learn": "ML Framework",
+    "Matplotlib": "Data Visualization",
+    "Seaborn": "Data Visualization",
+    "Plotly": "Data Visualization",
+    "Tableau": "BI Tool",
+    "Power BI": "BI Tool",
+    "Excel": "Productivity Tool",
+    
+    # Web Technologies
+    "HTML": "Web Technology",
+    "HTML5": "Web Technology",
+    "CSS": "Web Technology",
+    "CSS3": "Web Technology",
+    "JavaScript": "Programming Language",
+    "jQuery": "Web Library",
+    "Tailwind CSS": "Web Framework",
+    "Bootstrap": "Web Framework",
     
     # Databases
     "PostgreSQL": "Database",
@@ -285,7 +379,27 @@ SKILL_CATEGORIES = {
     "GitHub": "Version Control",
     "GitLab": "Version Control",
     "Jira": "Project Management",
+    "Android Studio": "IDE",
+    "Visual Studio": "IDE",
+    "Visual Studio Code": "IDE",
+    "IntelliJ IDEA": "IDE",
+    "PyCharm": "IDE",
+    "Eclipse": "IDE",
+    "Figma": "Design Tool",
+    "Sketch": "Design Tool",
 }
+
+
+# Add OS categories
+SKILL_CATEGORIES.update({
+    "Windows": "Operating System",
+    "Linux": "Operating System",
+    "Ubuntu": "Operating System",
+    "macOS": "Operating System",
+    "Unix": "Operating System",
+    "Android": "Mobile OS",
+    "iOS": "Mobile OS",
+})
 
 
 class NormalizerAgent:

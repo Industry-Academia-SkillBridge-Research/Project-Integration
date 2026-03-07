@@ -5,7 +5,7 @@ Loads fine-tuned Qwen model (LoRA adapter) for generating skill gap explanations
 Replaces external Colab/ngrok dependency with local inference.
 
 Model: Qwen2.5-3B-Instruct with fine-tuned LoRA adapter
-Location: F:\\CV Parser Agent\\AI Explanation\\qwen-explainer-output
+Location: Agent-Runtime/ai_explanation/qwen-explainer-output
 """
 import logging
 import os
@@ -54,7 +54,10 @@ class AIExplainerService:
         """
         if model_path is None:
             # Default to the fine-tuned model in AI Explanation folder
-            model_path = r"F:\CV Parser Agent\AI Explanation\qwen-explainer-output"
+            import os
+            from pathlib import Path
+            base_path = Path(__file__).parent.parent / "AI Explanation" / "qwen-explainer-output"
+            model_path = str(base_path.resolve())
         
         self.model_path = model_path
         self.model = None

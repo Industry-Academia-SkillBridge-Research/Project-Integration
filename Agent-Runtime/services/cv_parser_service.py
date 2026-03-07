@@ -326,12 +326,15 @@ class CVParserService:
     "university": "University name"
   },
   "skills": [{
-    "programming_languages": ["Python", "Java", ...],
-    "frameworks": ["React", "Django", ...],
-    "technologies": ["Docker", "AWS", ...],
-    "technical_skills": ["Machine Learning", "Data Analysis", ...],
-    "database": ["PostgreSQL", "MongoDB", ...],
-    "soft_skills": ["Leadership", "Communication", ...]
+    "programming_languages": ["Python", "Java", "JavaScript", "C++", "Kotlin", "PHP", "TypeScript", ...],
+    "frameworks": ["React", "Django", "TensorFlow", "PyTorch", "Flask", "Spring Boot", "Express.js", ...],
+    "web_technologies": ["HTML", "CSS", "Node.js", "Tailwind CSS", "Bootstrap", "Sass", "jQuery", ...],
+    "database": ["MySQL", "PostgreSQL", "MongoDB", "SQL", "Redis", "Oracle", ...],
+    "tools": ["Git", "GitHub", "Figma", "MS Excel", "Power BI", "Tableau", "Android Studio", "Visual Studio", "Jupyter", "Streamlit", ...],
+    "operating_systems": ["Windows", "Linux", "macOS", "Unix", "Ubuntu", ...],
+    "technologies": ["Docker", "AWS", "Azure", "Elasticsearch", "Prophet", "XGBoost", "Kubernetes", "Jenkins", ...],
+    "technical_skills": ["Machine Learning", "Data Analysis", "Data Science", "Predictive Analytics", "Data Visualization", "Mobile Development", "Web Development", "Cloud Computing", ...],
+    "soft_skills": ["Leadership", "Communication", "Teamwork", "Problem Solving", ...]
   }],
   "projects_and_technologies_involved": [{
     "project_name": "Project title",
@@ -349,11 +352,22 @@ class CVParserService:
 1. Extract contact info (name, email, phone) from header/top section
 2. Identify current role from most recent work experience
 3. Infer target role from objective/summary or senior version of current role
-4. Categorize skills properly (programming_languages vs frameworks vs technologies)
-5. Extract ALL projects with technologies used
-6. Count total experience in months across all jobs
-7. If field not found, use null (not empty string)
-8. Return ONLY the JSON object, no markdown formatting or explanation
+4. **EXTRACT EVERY SINGLE SKILL** mentioned in the resume - do not skip anything technical
+5. Categorize skills into the correct category:
+   - **programming_languages**: Core languages (Python, Java, JavaScript, C++, PHP, Kotlin, TypeScript, Ruby, Go, etc.)
+   - **frameworks**: Software frameworks (React, Django, TensorFlow, PyTorch, Flask, Spring Boot, Express.js, Angular, Vue.js, etc.)
+   - **web_technologies**: Web-specific tech (HTML, CSS, Node.js, Tailwind CSS, Bootstrap, Sass, jQuery, Ajax, REST API, GraphQL, etc.)
+   - **database**: All database systems (MySQL, PostgreSQL, MongoDB, SQL, Redis, Oracle, Cassandra, Neo4j, etc.)
+   - **tools**: Development and productivity tools (Git, GitHub, Figma, MS Excel, Power BI, Tableau, Jira, Android Studio, Visual Studio, Jupyter Notebook, Streamlit, Postman, etc.)
+   - **operating_systems**: Operating systems (Windows, Linux, macOS, Unix, Ubuntu, CentOS, Android, iOS, etc.)
+   - **technologies**: Cloud, DevOps, and other tech (Docker, AWS, Azure, GCP, Elasticsearch, Kubernetes, Jenkins, CI/CD, Kafka, etc.)
+   - **technical_skills**: Broad technical competencies (Machine Learning, Deep Learning, Data Analysis, Data Science, Predictive Analytics, Data Visualization, Mobile Development, Web Development, Cloud Computing, etc.)
+6. Extract ALL projects with technologies used
+7. Count total experience in months across all jobs
+8. If field not found, use null (not empty string)
+9. Return ONLY the JSON object, no markdown formatting or explanation
+
+**CRITICAL**: If you see a skill and are unsure which category, still include it in the most relevant category. DO NOT skip any skills!
 
 **IMPORTANT:** Return ONLY valid JSON. Do not include any text before or after the JSON object."""
     
@@ -386,7 +400,8 @@ class CVParserService:
             # Sanitize skills: convert None values to empty lists
             skill_categories = [
                 "programming_languages", "frameworks", "technologies",
-                "technical_skills", "database", "soft_skills"
+                "technical_skills", "database", "web_technologies",
+                "tools", "operating_systems", "soft_skills"
             ]
             for skill_group in structured_data["skills"]:
                 if isinstance(skill_group, dict):

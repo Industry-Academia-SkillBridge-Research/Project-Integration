@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
         # Load GNN model
         logger.info("Loading GNN model for link prediction...")
         try:
-            base_path = Path(__file__).parent.parent / "GNN-Link-Prediction"
+            base_path = Path(__file__).parent / "GNN-Link-Prediction"
             model_path = str(base_path / "models" / "best_gnn_linkpred.pt")
             data_path = str(base_path / "output" / "heterodata_lp.pt")
             id_maps_path = str(base_path / "output" / "id_maps.json")
