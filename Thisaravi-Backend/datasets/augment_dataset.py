@@ -2,7 +2,7 @@
 import json
 import os
 import sys
-import ollama
+import thisaravi
 from tqdm import tqdm
 from pydantic import BaseModel
 from typing import List, Optional, Union
@@ -247,7 +247,7 @@ def generate_with_gemini(client, prompt):
 
 def generate_with_ollama(model_name, prompt):
     try:
-        response = ollama.chat(
+        response = thisaravi.chat(
             model=model_name,
             messages=[{'role': 'user', 'content': prompt}],
             options={'num_ctx': 4096} # Increase context window for verbose output

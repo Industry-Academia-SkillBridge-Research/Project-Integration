@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict
 import google.genai as genai
-import ollama
+import thisaravi
 
 from neo4j import GraphDatabase
 
@@ -506,7 +506,7 @@ async def run_ollama(request: ProjectRequest):
     Executes logic using Ollama (Fine-tuned or Generic).
     Yields raw text chunks for streaming.
 
-    ollama.chat(stream=True) is a synchronous blocking iterator — run it in a
+    thisaravi.chat(stream=True) is a synchronous blocking iterator — run it in a
     thread pool so the asyncio event loop stays free and each token is flushed
     to the client immediately as it is generated.
     """
@@ -548,7 +548,7 @@ async def run_ollama(request: ProjectRequest):
 
     def _stream():
         try:
-            stream = ollama.chat(
+            stream = thisaravi.chat(
                 model=model_id,
                 messages=[{'role': 'user', 'content': prompt}],
                 stream=True,

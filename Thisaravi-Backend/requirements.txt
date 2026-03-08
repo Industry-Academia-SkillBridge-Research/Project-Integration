@@ -3,6 +3,7 @@ uvicorn
 pydantic
 python-dotenv
 ollama
+thisaravi @ git+https://github.com/Thisaravi/Thisaravi.git
 streamlit
 watchdog
 requests
