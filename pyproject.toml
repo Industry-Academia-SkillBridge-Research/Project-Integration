@@ -20,6 +20,7 @@ dependencies = [
     "google-genai",
     "httpx",
     "huggingface-hub",
+    "itsdangerous",
     "joblib",
     "langchain",
     "langchain-google-genai",

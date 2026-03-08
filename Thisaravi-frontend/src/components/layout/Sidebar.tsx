@@ -31,7 +31,7 @@ export default function Sidebar() {
             <BarChart3 className="h-4 w-4" />
           </div>
           <div>
-            <h2 className="text-base font-semibold tracking-tight text-sidebar-primary-foreground">UpSkill</h2>
+            <h2 className="text-base font-semibold tracking-tight text-sidebar-primary-foreground">SkillScope</h2>
             <p className="text-[10px] text-sidebar-foreground/60 leading-none">Skill Gap Analyzer</p>
           </div>
         </div>
