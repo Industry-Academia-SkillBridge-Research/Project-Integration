@@ -177,13 +177,18 @@ class CombinedSourceRequest(BaseModel):
     - role_key        → optionally enrich required_skills from Role-Skill-API
     - inline_*        → use directly (skips external fetch)
     """
-    # Job source – one of: job_id OR inline_job
+    # Job source – one of: job_id OR inline_job OR inline_job_data (manual mode)
     job_id:         Optional[str] = None
     inline_job:     Optional[JobData] = None
 
-    # Candidate source – one of: candidate_id OR inline_candidate
+    # Candidate source – one of: candidate_id OR inline_candidate OR inline_student_data (manual mode)
     candidate_id:       Optional[str] = None
     inline_candidate:   Optional[CandidateProfile] = None
+
+    # Manual mode: accept raw StudentData + JobData directly
+    inline_student_data: Optional[StudentData] = None
+    inline_job_data:     Optional[JobData] = None
+    target_role:         Optional[str] = None
 
     # Optional: enrich job skills from Role-Skill-API
     role_key:       Optional[str] = None
@@ -398,47 +403,93 @@ def candidate_profile_to_student_data(profile: dict) -> StudentData:
     )
 
 
-def construct_analysis_prompt(request: ProjectRequest, system_prompt: str) -> str:
+
+def construct_enriched_prompt(
+    student_data: StudentData,
+    job_data: JobData,
+    target_role: str,
+    recommendation_results: dict,
+    system_prompt: str,
+) -> str:
     """
-    Constructs a consistent prompt for generic models (Gemini & Generic Ollama).
+    Build a prompt for generic models enriched with recommendation engine data.
+    Combines the standard student/job profile with analytical results.
     """
-    return f"""
+    base = f"""
     Analyze this student against the target job.
 
     STUDENT PROFILE:
-    Name: {request.student_data.name}
-    Role: {request.student_data.current_role}
-    Major: {request.student_data.major}
-    Interests: {', '.join(request.student_data.interests)}
-    Personality: {request.student_data.personality}
-    Skills: {', '.join(request.student_data.skills)}
-    Experience: {request.student_data.experience_summary}
+    Name: {student_data.name}
+    Role: {student_data.current_role}
+    Major: {student_data.major}
+    Interests: {', '.join(student_data.interests or [])}
+    Personality: {student_data.personality}
+    Skills: {', '.join(student_data.skills)}
+    Experience: {student_data.experience_summary}
 
     TARGET JOB:
-    Role: {request.job_data.role}
-    Required Skills: {', '.join(request.job_data.required_skills)}
-    Description: {request.job_data.description_summary}
-
-    {system_prompt}
+    Role: {job_data.role}
+    Required Skills: {', '.join(job_data.required_skills)}
+    Description: {job_data.description_summary}
     """
 
+    rec_context = _build_recommendation_context_text(recommendation_results)
+    enrichment = ""
+    if rec_context:
+        enrichment = (
+            "\n\n--- RECOMMENDATION ENGINE ANALYSIS ---\n"
+            "(Use this data-driven analysis to inform and validate your recommendations)\n\n"
+            + rec_context
+        )
 
-def _build_input_dict(request: ProjectRequest) -> dict:
-    """Build a serializable dict of the request input for logging."""
-    return {
-        "student_data": {
-            "demographics": f"{request.student_data.name}, {request.student_data.current_role}",
-            "major": request.student_data.major,
-            "interests": request.student_data.interests,
-            "current_skills": request.student_data.skills,
-            "personality": request.student_data.personality,
-        },
-        "job_data": {
-            "target_job_role": request.target_role,
-            "required_skills": request.job_data.required_skills,
-            "description": request.job_data.description_summary,
-        },
-    }
+    return base + enrichment + "\n\n" + system_prompt
+
+
+
+def _build_recommendation_context_text(results: dict) -> str:
+    """Format recommendation engine results into concise text for LLM context."""
+    sections = []
+
+    gap = results.get("skill_gap")
+    if gap:
+        deficits = gap.get("deficits", [])[:10]
+        if deficits:
+            lines = [
+                f"  - {d['skill_name']} (deficit={d.get('deficit', 0):.2f}, importance={d.get('importance', 0):.4f})"
+                for d in deficits
+            ]
+            sections.append("Skill Deficits:\n" + "\n".join(lines))
+
+    courses = results.get("recommendations", {}).get("recommendations", [])[:5]
+    if courses:
+        lines = [
+            f"  - {c.get('course_name', 'Unknown')} (gain={c.get('gain_score', 0):.2f})"
+            for c in courses
+        ]
+        sections.append("Recommended Courses:\n" + "\n".join(lines))
+
+    proj = results.get("project_relevance")
+    if proj:
+        score = proj.get("candidate_project_score")
+        if score is not None:
+            proj_lines = [f"  Overall project relevance score: {score:.2f}"]
+            for p in proj.get("projects", [])[:3]:
+                proj_lines.append(
+                    f"  - {p.get('project_name', '?')} (relevance={p.get('relevance_score', 0):.2f})"
+                )
+            sections.append("Project Relevance:\n" + "\n".join(proj_lines))
+
+    gnn = results.get("missing_skills_gnn")
+    if gnn and gnn.get("gnn_available"):
+        skills = gnn.get("missing_skills", [])[:8]
+        if skills:
+            lines = [
+                f"  - {s.get('skill_name', '?')} (score={s.get('final_score', 0):.3f})"
+                for s in skills
+            ]
+            sections.append("GNN-Predicted Missing Skills:\n" + "\n".join(lines))
+
+    return "\n\n".join(sections)
 
 
 async def logging_wrapper(generator, input_data: dict, provider: str):
@@ -458,39 +509,85 @@ async def logging_wrapper(generator, input_data: dict, provider: str):
 
 # --- LOGIC HANDLERS ---
 
-async def run_gemini(request: ProjectRequest):
+async def run_enriched_ollama(
+    student_data: StudentData,
+    job_data: JobData,
+    target_role: str,
+    recommendation_results: dict,
+    model_provider: str,
+    ollama_model: str = None,
+):
     """
-    Executes logic using Google's Gemini Flash model (Latest).
-    Yields raw text chunks for streaming.
+    Stream Ollama output enriched with recommendation engine data.
 
-    generate_content_stream is a synchronous blocking iterator — run it in a
-    thread pool so the asyncio event loop stays free and chunks are flushed to
-    the client in real-time.
+    - Finetuned model: compact JSON as user msg + recommendation context as system msg
+    - Generic model: single enriched prompt with all context
     """
     import asyncio
 
-    if not gemini_client:
-        yield "Error: Gemini API key not configured"
-        return
+    if model_provider == "ollama_generic":
+        model_id = ollama_model or DEFAULT_OLLAMA_GENERIC
+    else:
+        model_id = ollama_model or DEFAULT_OLLAMA_FINE_TUNED
 
-    user_prompt = construct_analysis_prompt(request, SYSTEM_PROMPT)
+    is_finetuned = (model_id == DEFAULT_OLLAMA_FINE_TUNED)
+
+    if is_finetuned:
+        # Compact JSON matching training format
+        input_json = {
+            "student_data": {
+                "demographics": f"{student_data.name}, {student_data.current_role}",
+                "major": student_data.major,
+                "interests": student_data.interests,
+                "current_skills": student_data.skills,
+                "personality": student_data.personality,
+            },
+            "job_data": {
+                "target_job_role": target_role,
+                "required_skills": job_data.required_skills,
+                "description": job_data.description_summary,
+            },
+        }
+        user_prompt = json.dumps(input_json)
+
+        rec_context = _build_recommendation_context_text(recommendation_results)
+        messages = []
+        if rec_context:
+            messages.append({
+                "role": "system",
+                "content": (
+                    "You have access to the following analytical data from our recommendation engine. "
+                    "Use it to make your skill gap analysis and project recommendations more precise "
+                    "and data-driven.\n\n" + rec_context
+                ),
+            })
+        messages.append({"role": "user", "content": user_prompt})
+    else:
+        prompt = construct_enriched_prompt(
+            student_data, job_data, target_role,
+            recommendation_results, SYSTEM_PROMPT,
+        )
+        messages = [{"role": "user", "content": prompt}]
+
     loop = asyncio.get_event_loop()
     queue: asyncio.Queue = asyncio.Queue()
 
     def _stream():
         try:
-            response = gemini_client.models.generate_content_stream(
-                model=GEMINI_MODEL_ID,
-                contents=user_prompt,
+            stream = thisaravi.chat(
+                model=model_id,
+                messages=messages,
+                stream=True,
+                options={"temperature": 1.0},
             )
-            for chunk in response:
-                if chunk.text:
-                    loop.call_soon_threadsafe(queue.put_nowait, chunk.text)
+            for chunk in stream:
+                content = chunk["message"]["content"]
+                loop.call_soon_threadsafe(queue.put_nowait, content)
         except Exception as e:
-            logger.error(f"Gemini Error: {e}")
+            logger.error(f"Enriched Ollama Error: {e}")
             loop.call_soon_threadsafe(queue.put_nowait, f"Error: {str(e)}")
         finally:
-            loop.call_soon_threadsafe(queue.put_nowait, None)  # sentinel
+            loop.call_soon_threadsafe(queue.put_nowait, None)
 
     t = threading.Thread(target=_stream, daemon=True)
     t.start()
@@ -501,67 +598,42 @@ async def run_gemini(request: ProjectRequest):
         yield chunk
 
 
-async def run_ollama(request: ProjectRequest):
+async def run_enriched_gemini(
+    student_data: StudentData,
+    job_data: JobData,
+    target_role: str,
+    recommendation_results: dict,
+):
     """
-    Executes logic using Ollama (Fine-tuned or Generic).
-    Yields raw text chunks for streaming.
-
-    thisaravi.chat(stream=True) is a synchronous blocking iterator — run it in a
-    thread pool so the asyncio event loop stays free and each token is flushed
-    to the client immediately as it is generated.
+    Stream Gemini output enriched with recommendation engine data.
     """
     import asyncio
 
-    # Determine model to use
-    if request.model_provider == "ollama_generic":
-        model_id = request.ollama_model or DEFAULT_OLLAMA_GENERIC
-    else:
-        # Default to fine-tuned
-        model_id = request.ollama_model or DEFAULT_OLLAMA_FINE_TUNED
+    if not gemini_client:
+        yield "Error: Gemini API key not configured"
+        return
 
-    is_finetuned_logic = (model_id == DEFAULT_OLLAMA_FINE_TUNED)
-
-    # Prepare Prompt based on Model Type
-    if is_finetuned_logic:
-        # Fine-tuned models expect specific compact input structure matching training data
-        input_json = {
-            "student_data": {
-                "demographics": f"{request.student_data.name}, {request.student_data.current_role}",
-                "major": request.student_data.major,
-                "interests": request.student_data.interests,
-                "current_skills": request.student_data.skills,
-                "personality": request.student_data.personality
-            },
-            "job_data": {
-                "target_job_role": request.target_role,
-                "required_skills": request.job_data.required_skills,
-                "description": request.job_data.description_summary
-            }
-        }
-        prompt = json.dumps(input_json)
-    else:
-        # Generic models use the same prompt structure as Gemini
-        prompt = construct_analysis_prompt(request, SYSTEM_PROMPT)
-
+    prompt = construct_enriched_prompt(
+        student_data, job_data, target_role,
+        recommendation_results, SYSTEM_PROMPT,
+    )
     loop = asyncio.get_event_loop()
     queue: asyncio.Queue = asyncio.Queue()
 
     def _stream():
         try:
-            stream = thisaravi.chat(
-                model=model_id,
-                messages=[{'role': 'user', 'content': prompt}],
-                stream=True,
-                options={"temperature": 1.0},
+            response = gemini_client.models.generate_content_stream(
+                model=GEMINI_MODEL_ID,
+                contents=prompt,
             )
-            for chunk in stream:
-                content = chunk['message']['content']
-                loop.call_soon_threadsafe(queue.put_nowait, content)
+            for chunk in response:
+                if chunk.text:
+                    loop.call_soon_threadsafe(queue.put_nowait, chunk.text)
         except Exception as e:
-            logger.error(f"Ollama Error: {e}")
+            logger.error(f"Enriched Gemini Error: {e}")
             loop.call_soon_threadsafe(queue.put_nowait, f"Error: {str(e)}")
         finally:
-            loop.call_soon_threadsafe(queue.put_nowait, None)  # sentinel
+            loop.call_soon_threadsafe(queue.put_nowait, None)
 
     t = threading.Thread(target=_stream, daemon=True)
     t.start()
@@ -575,139 +647,219 @@ async def run_ollama(request: ProjectRequest):
 # --- API ENDPOINTS ---
 
 @app.post("/generate-project")
-async def generate_project(request: ProjectRequest):
-    """
-    Unified endpoint for project generation.
-    Stream raw text to allow frontend parsing/display.
-    Logs the complete output for feedback collection.
-    """
-    input_data = _build_input_dict(request)
-
-    if request.model_provider == "gemini":
-        generator = run_gemini(request)
-    else:
-        # Covers "ollama" and "ollama_generic"
-        generator = run_ollama(request)
-
-    # Wrap with logging to capture output for feedback
-    logged_generator = logging_wrapper(generator, input_data, request.model_provider)
-    return StreamingResponse(
-        logged_generator,
-        media_type="text/plain",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",  # disable nginx/proxy buffering
-        },
-    )
-
-
-@app.post("/generate-project-from-sources")
 async def generate_project_from_sources(req: CombinedSourceRequest):
     """
-    Updated endpoint that orchestrates Agent-Runtime and Advanced-Recommendation.
-    
-    Now returns comprehensive analysis including:
-    - Skill gaps from Advanced-Recommendation
-    - Course recommendations
-    - Project relevance analysis
-    - GNN-based missing skills
-    
-    Data resolution order:
-    Job data:
-      1. ``job_id``       → fetched from Neo4j (if available)
-      2. ``inline_job``   → used directly
-    
-    Candidate data:
-      1. ``candidate_id`` → fetched from Agent-Runtime API
-      2. ``inline_candidate`` → used directly
-    
-    Optional:
-      ``role_key`` → enriches skills from Advanced-Recommendation
+    Unified generation endpoint — supports both manual and source modes.
+
+    **Manual mode** (``inline_student_data`` + ``inline_job_data``):
+      Uses the provided student/job data directly, optionally enriched with
+      recommendation engine data if ``candidate_id`` and ``role_key`` are present.
+
+    **Source mode** (``candidate_id`` / ``job_id`` / ``role_key``):
+      Fetches comprehensive analysis (skill gaps, course recommendations,
+      project relevance, GNN missing skills), resolves candidate profile and
+      job data, enriches the LLM prompt with all analytical context.
+
+    Both modes stream finetuned/generic model output as text/plain.
     """
-    logger.info(f"Combined source request: candidate={req.candidate_id}, job={req.job_id}, role={req.role_key}")
-    
+    # ── Detect manual mode ────────────────────────────────────────────────
+    is_manual = req.inline_student_data is not None and req.inline_job_data is not None
+    logger.info(
+        f"Generate request: mode={'manual' if is_manual else 'source'}, "
+        f"candidate={req.candidate_id}, job={req.job_id}, role={req.role_key}"
+    )
+
     try:
         # Initialize clients
         agent_client = AgentRuntimeClient()
         rec_client = RecommendationClient()
-        
-        # ── 1. Resolve candidate data ──────────────────────────────────────
-        candidate_id = None
-        cv_analysis = None
-        
-        if req.candidate_id:
-            logger.info(f"Fetching CV analysis from Agent-Runtime for {req.candidate_id}...")
-            try:
-                cv_analysis = agent_client.skill_explain(
-                    candidate_id=req.candidate_id,
-                    role_key=req.role_key or "ai_ml_engineer",
-                    top_n=10
+
+        if is_manual:
+            # ── MANUAL MODE: use provided data directly ───────────────────
+            student_data = req.inline_student_data
+            job_data_obj = req.inline_job_data
+            target_role = req.target_role or req.inline_job_data.role
+            candidate_id = req.candidate_id  # may be None
+
+            # Optionally fetch recommendation data if candidate_id + role_key provided
+            results = {}
+            if candidate_id and req.role_key:
+                role_key = req.role_key
+                logger.info(f"Manual mode with recommendation enrichment: {candidate_id} → {role_key}")
+                try:
+                    gap_response = rec_client.skill_gap(candidate_id, role_key, top_k=25)
+                    results["skill_gap"] = gap_response
+                except Exception as e:
+                    logger.warning(f"Skill gap fetch failed (manual mode): {e}")
+                try:
+                    courses_response = rec_client.recommend_courses(candidate_id, role_key, top_k=25, top_n=10)
+                    results["recommendations"] = courses_response
+                except Exception as e:
+                    logger.warning(f"Course recommendation failed (manual mode): {e}")
+
+        else:
+            # ── SOURCE MODE: resolve from services ────────────────────────
+            candidate_id = req.candidate_id
+            cv_analysis = None
+
+            if req.candidate_id:
+                logger.info(f"Fetching CV analysis from Agent-Runtime for {req.candidate_id}...")
+                try:
+                    cv_analysis = agent_client.skill_explain(
+                        candidate_id=req.candidate_id,
+                        role_key=req.role_key or "ai_ml_engineer",
+                        top_n=10
+                    )
+                    logger.info(f"✓ CV analysis retrieved")
+                except Exception as e:
+                    logger.warning(f"Failed to get CV analysis: {e}")
+
+            if not candidate_id and not req.inline_candidate:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Provide either 'candidate_id', 'inline_candidate', or 'inline_student_data'."
                 )
-                candidate_id = req.candidate_id
-                logger.info(f"✓ CV analysis retrieved")
+
+            if req.inline_candidate:
+                candidate_id = req.inline_candidate.candidate_id
+
+            # ── 2. Resolve role/job data ──────────────────────────────────
+            role_key = req.role_key or "ai_ml_engineer"
+
+            # ── 3. Fetch comprehensive analysis ──────────────────────────
+            logger.info(f"Fetching comprehensive analysis for {candidate_id} → {role_key}...")
+
+            results = {
+                "candidate_id": candidate_id,
+                "role_key": role_key,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+
+            # Get skill gaps
+            try:
+                gap_response = rec_client.skill_gap(candidate_id, role_key, top_k=25)
+                results["skill_gap"] = gap_response
+                logger.info(f"✓ Skill gaps: {len(gap_response.get('deficits', []))} deficits")
             except Exception as e:
-                logger.warning(f"Failed to get CV analysis: {e}")
-        
-        if not candidate_id and not req.inline_candidate:
-            raise HTTPException(
-                status_code=422,
-                detail="Provide either 'candidate_id' or 'inline_candidate'."
+                logger.warning(f"Skill gap fetch failed: {e}")
+                results["skill_gap_error"] = str(e)
+
+            # Get course recommendations
+            try:
+                courses_response = rec_client.recommend_courses(candidate_id, role_key, top_k=25, top_n=10)
+                results["recommendations"] = courses_response
+                logger.info(f"✓ Course recommendations: {len(courses_response.get('recommendations', []))} courses")
+            except Exception as e:
+                logger.warning(f"Course recommendation failed: {e}")
+                results["recommendations_error"] = str(e)
+
+            # Get project relevance
+            try:
+                projects_response = rec_client.project_relevance(candidate_id, role_key, top_n=5)
+                results["project_relevance"] = projects_response
+                logger.info(f"✓ Project relevance: score={projects_response.get('candidate_project_score')}")
+            except Exception as e:
+                logger.warning(f"Project relevance failed: {e}")
+                results["project_relevance_error"] = str(e)
+
+            # Get GNN missing skills (optional)
+            try:
+                gnn_response = rec_client.missing_skills_gnn(candidate_id, role_key, top_k=15)
+                if gnn_response.get("gnn_available"):
+                    results["missing_skills_gnn"] = gnn_response
+                    logger.info(f"✓ GNN analysis: {len(gnn_response.get('missing_skills', []))} skills")
+            except Exception as e:
+                logger.info(f"⚠ GNN analysis unavailable (non-critical): {e}")
+
+            # ── 4. Resolve candidate profile for LLM prompt ──────────────
+            candidate_profile = None
+            if req.inline_candidate:
+                candidate_profile = req.inline_candidate.model_dump()
+            elif candidate_id:
+                try:
+                    candidate_profile = fetch_candidate_profile(candidate_id)
+                except HTTPException:
+                    try:
+                        candidate_profile = fetch_candidate_profile_remote(candidate_id)
+                    except HTTPException:
+                        logger.warning(f"Could not resolve profile for {candidate_id}")
+
+            if not candidate_profile:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Cannot resolve candidate profile for '{candidate_id}'. "
+                           f"Create it via POST /profiles first.",
+                )
+
+            student_data = candidate_profile_to_student_data(candidate_profile)
+
+            # ── 5. Resolve job data for LLM prompt ───────────────────────
+            if req.job_id:
+                job_raw = fetch_linkedin_job(req.job_id)
+                job_data_obj, target_role = linkedin_job_to_job_data(job_raw)
+            elif req.inline_job:
+                job_data_obj = req.inline_job
+                target_role = req.inline_job.role
+            else:
+                # No specific job -- build from role_key + role skills
+                role_skills = []
+                try:
+                    role_skills = fetch_role_skills(role_key, top_n=15)
+                except Exception:
+                    gap_deficits = results.get("skill_gap", {}).get("deficits", [])
+                    role_skills = [d["skill_name"] for d in gap_deficits[:15]]
+                role_name = role_key.replace("_", " ").title()
+                job_data_obj = JobData(
+                    role=role_name,
+                    required_skills=role_skills,
+                    description_summary=f"Targeting a role as {role_name}",
+                )
+                target_role = role_name
+
+        # ── 6. Stream enriched LLM output ────────────────────────────────
+        logger.info(f"Generating enriched plan for {candidate_id} -> {target_role} via {req.model_provider}")
+
+        if req.model_provider == "gemini":
+            generator = run_enriched_gemini(
+                student_data, job_data_obj, target_role, results,
             )
-        
-        if req.inline_candidate:
-            candidate_id = req.inline_candidate.candidate_id
-        
-        # ── 2. Resolve role/job data ──────────────────────────────────────
-        role_key = req.role_key or "ai_ml_engineer"
-        
-        # ── 3. Fetch comprehensive analysis ───────────────────────────────
-        logger.info(f"Fetching comprehensive analysis for {candidate_id} → {role_key}...")
-        
-        results = {
-            "candidate_id": candidate_id,
-            "role_key": role_key,
-            "timestamp": datetime.utcnow().isoformat(),
+        else:
+            generator = run_enriched_ollama(
+                student_data, job_data_obj, target_role, results,
+                model_provider=req.model_provider,
+                ollama_model=req.ollama_model,
+            )
+
+        input_data = {
+            "student_data": {
+                "demographics": f"{student_data.name}, {student_data.current_role}",
+                "major": student_data.major,
+                "interests": student_data.interests,
+                "current_skills": student_data.skills,
+                "personality": student_data.personality,
+            },
+            "job_data": {
+                "target_job_role": target_role,
+                "required_skills": job_data_obj.required_skills,
+                "description": job_data_obj.description_summary,
+            },
+            "recommendation_context": {
+                "skill_gap_count": len(results.get("skill_gap", {}).get("deficits", [])),
+                "course_count": len(results.get("recommendations", {}).get("recommendations", [])),
+                "has_project_relevance": "project_relevance" in results,
+                "has_gnn": bool(results.get("missing_skills_gnn", {}).get("gnn_available")),
+            },
         }
-        
-        # Get skill gaps
-        try:
-            gap_response = rec_client.skill_gap(candidate_id, role_key, top_k=25)
-            results["skill_gap"] = gap_response
-            logger.info(f"✓ Skill gaps: {len(gap_response.get('deficits', []))} deficits")
-        except Exception as e:
-            logger.warning(f"Skill gap fetch failed: {e}")
-            results["skill_gap_error"] = str(e)
-        
-        # Get course recommendations
-        try:
-            courses_response = rec_client.recommend_courses(candidate_id, role_key, top_k=25, top_n=10)
-            results["recommendations"] = courses_response
-            logger.info(f"✓ Course recommendations: {len(courses_response.get('recommendations', []))} courses")
-        except Exception as e:
-            logger.warning(f"Course recommendation failed: {e}")
-            results["recommendations_error"] = str(e)
-        
-        # Get project relevance
-        try:
-            projects_response = rec_client.project_relevance(candidate_id, role_key, top_n=5)
-            results["project_relevance"] = projects_response
-            logger.info(f"✓ Project relevance: score={projects_response.get('candidate_project_score')}")
-        except Exception as e:
-            logger.warning(f"Project relevance failed: {e}")
-            results["project_relevance_error"] = str(e)
-        
-        # Get GNN missing skills (optional)
-        try:
-            gnn_response = rec_client.missing_skills_gnn(candidate_id, role_key, top_k=15)
-            if gnn_response.get("gnn_available"):
-                results["missing_skills_gnn"] = gnn_response
-                logger.info(f"✓ GNN analysis: {len(gnn_response.get('missing_skills', []))} skills")
-        except Exception as e:
-            logger.info(f"⚠ GNN analysis unavailable (non-critical): {e}")
-        
-        # ── 4. Return comprehensive results ────────────────────────────────
-        logger.info(f"✓ Analysis complete for {candidate_id}")
-        return JSONResponse(status_code=200, content=results)
+
+        logged_generator = logging_wrapper(generator, input_data, req.model_provider)
+        return StreamingResponse(
+            logged_generator,
+            media_type="text/plain",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+            },
+        )
         
     except HTTPException:
         raise
@@ -993,10 +1145,22 @@ async def get_jobs_by_role(role_key: Optional[str] = None, limit: int = 100):
                 """,
                 {"role_key": role_key, "limit": limit},
             )
+            # Fetch role-level required skills once
+            skill_rows = _neo4j_query(
+                """
+                MATCH (r:Role {role_key: $role_key})-[:REQUIRES_SKILL]->(s:Skill)
+                RETURN s.name AS name
+                ORDER BY s.name
+                """,
+                {"role_key": role_key},
+            )
+            role_skills = [s["name"] for s in skill_rows]
+
             jobs = [{"job_id": r["job_id"], "title": r["title"],
                      "company": r["company"], "location": r["location"],
                      "role_key": r["role_key"], "description": r.get("description", ""),
-                     "job_url": r.get("job_url", ""), "posted_date": r.get("posted_date", "")} for r in rows]
+                     "job_url": r.get("job_url", ""), "posted_date": r.get("posted_date", ""),
+                     "skills": role_skills} for r in rows]
             return {"role_key": role_key, "count": len(jobs), "jobs": jobs}
         else:
             rows = _neo4j_query(

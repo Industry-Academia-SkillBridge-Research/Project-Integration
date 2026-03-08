@@ -1,31 +1,13 @@
 import { ENDPOINTS } from '@/config/api';
-import type { ProjectRequest, CombinedSourceRequest, RoleInfo, LinkedInJobResult, CandidateSummary } from '@/types/api';
+import type { CombinedSourceRequest, RoleInfo, LinkedInJobResult, CandidateSummary } from '@/types/api';
 
-// ---- Streaming generators ----
+// ---- Streaming generator ----
 
 export async function* generateProject(
-  request: ProjectRequest,
-  signal?: AbortSignal,
-): AsyncGenerator<string> {
-  const response = await fetch(ENDPOINTS.ANALYSIS.GENERATE, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request),
-    signal,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Generation failed: ${response.status} ${response.statusText}`);
-  }
-
-  yield* _streamResponse(response);
-}
-
-export async function* generateProjectFromSources(
   request: CombinedSourceRequest,
   signal?: AbortSignal,
 ): AsyncGenerator<string> {
-  const response = await fetch(ENDPOINTS.ANALYSIS.GENERATE_FROM_SOURCES, {
+  const response = await fetch(ENDPOINTS.ANALYSIS.GENERATE, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),

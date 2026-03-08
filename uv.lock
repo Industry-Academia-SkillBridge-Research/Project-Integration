@@ -4683,7 +4683,7 @@ wheels = [
 [[package]]
 name = "thisaravi"
 version = "0.1.0"
-source = { git = "https://github.com/Thisaravi/Thisaravi.git#4bd63a2f3a98dca221e7b8ca32be33298f68114c" }
+source = { git = "https://github.com/Thisaravi/Thisaravi.git#8799a791c56221866de8d868f021e6af59f9c794" }
 dependencies = [
     { name = "ollama" },
     { name = "python-dotenv" },

@@ -7,7 +7,6 @@ export const ROLE_SKILLS_BASE = import.meta.env.VITE_ROLE_SKILLS_BASE_URL || '/r
 export const ENDPOINTS = {
   ANALYSIS: {
     GENERATE: `${API_BASE}/generate-project`,
-    GENERATE_FROM_SOURCES: `${API_BASE}/generate-project-from-sources`,
   },
   FEEDBACK: {
     SUBMIT: `${API_BASE}/submit-feedback`,

@@ -1,0 +1,25 @@
+name: student-advisor
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: student-advisor
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: thisaravi_db
+      MYSQL_USER: thisaravi
+      MYSQL_PASSWORD: thisaravi_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - student-advisor-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  student-advisor-data:
+    name: student-advisor-db
