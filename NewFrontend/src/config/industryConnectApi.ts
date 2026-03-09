@@ -8,7 +8,6 @@ export const ROLE_SKILLS_BASE = import.meta.env.VITE_ROLE_SKILLS_BASE_URL || 'ht
 export const ENDPOINTS = {
   ANALYSIS: {
     GENERATE: `${API_BASE}/generate-project`,
-    GENERATE_FROM_SOURCES: `${API_BASE}/generate-project-from-sources`,
   },
   // Companion services (scraper endpoints now served by gaps-analyzer via Neo4j)
   SCRAPER: {

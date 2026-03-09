@@ -533,22 +533,12 @@ async def run_enriched_ollama(
     is_finetuned = (model_id == DEFAULT_OLLAMA_FINE_TUNED)
 
     if is_finetuned:
-        # Compact JSON matching training format
-        input_json = {
-            "student_data": {
-                "demographics": f"{student_data.name}, {student_data.current_role}",
-                "major": student_data.major,
-                "interests": student_data.interests,
-                "current_skills": student_data.skills,
-                "personality": student_data.personality,
-            },
-            "job_data": {
-                "target_job_role": target_role,
-                "required_skills": job_data.required_skills,
-                "description": job_data.description_summary,
-            },
-        }
-        user_prompt = json.dumps(input_json)
+        # Normalized JSON matching training data format exactly
+        from input_normalizer import build_finetuned_input
+        user_prompt = build_finetuned_input(
+            student_data, job_data, target_role, recommendation_results,
+        )
+        logger.info("Finetuned model input: %s", user_prompt)
 
         rec_context = _build_recommendation_context_text(recommendation_results)
         messages = []

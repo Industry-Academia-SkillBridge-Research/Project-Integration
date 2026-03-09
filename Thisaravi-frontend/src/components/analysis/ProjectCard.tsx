@@ -59,8 +59,8 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             {project.implementation_steps && project.implementation_steps.length > 0 ? (
               <ol className="space-y-4">
                 {project.implementation_steps.map((step, i) => {
-                  // Strip leading numbering like "1." / "Step 1:" / "1)"
-                  const clean = step.replace(/^(?:Step\s*)?\d+[.):\-]\s*/i, '').trim();
+                  // Strip leading numbering like "1." / "Step 1:" / "1)" / "**1."
+                  const clean = step.replace(/^\*{0,2}(?:Step\s*)?\d+[.):\-]\s*\*{0,2}\s*/i, '').trim();
                   // Split into a title (up to first sentence / period / dash separator) and body
                   const dashIdx = clean.search(/\s[—–-]\s/);
                   const periodIdx = clean.indexOf('. ');

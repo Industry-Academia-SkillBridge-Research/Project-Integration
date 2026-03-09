@@ -51,6 +51,10 @@ export interface CombinedSourceRequest {
   role_key?: string;
   inline_job?: JobData;
   inline_candidate?: CandidateProfile;
+  // Manual mode: accept raw student/job data directly
+  inline_student_data?: StudentData;
+  inline_job_data?: JobData;
+  target_role?: string;
   model_provider: 'gemini' | 'ollama' | 'ollama_generic';
 }
 

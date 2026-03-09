@@ -104,16 +104,25 @@ export function parseStructuredText(text: string): AnalysisResult {
       /(?:\*\*Objective\*\*|Objective)\s*[:\-]*\s*\*{0,2}\s*(.+)/i
     );
 
-    // 6. Tech Stack — "**Tech Stack:**" or "Technologies:"
+    // 6. Tech Stack — "**Tech Stack:**" or "**Technologies:**"
+    //    Require bold markers or newline-anchored heading to avoid matching
+    //    casual mentions of "stack" / "technologies" inside Gap Analysis prose.
     const stackMatch = text.match(
-      /(?:\*\*Tech Stack\*\*|Tech Stack|Technologies|Stack)\s*[:\-]*\s*\*{0,2}\s*([\s\S]*?)(?=\*\*Implementation|\*\*Steps|###|$)/i
+      /(?:\*\*Tech Stack\b[^*]*\*\*|\*\*Technologies\b[^*]*\*\*|\n\s*Tech Stack)\s*[:\-]*\s*([\s\S]*?)(?=\*\*Implementation|\*\*Steps|\*\*\d+[.)]\s|---\s*\n\s*\*\*\d|\n\s*\n|###|$)/i
     );
 
     // 7. Implementation Steps — "**Implementation Plan:**" or "**Steps:**"
     //    Must match "Implementation Plan" as a unit so "Plan:**" isn't left in the capture
-    const stepsMatch = text.match(
+    let stepsMatch = text.match(
       /(?:\*\*Implementation Plan\*\*|\*\*Implementation Steps\*\*|\*\*Implementation\*\*|Implementation Plan|Implementation Steps|Steps)\s*[:\-]*\s*\*{0,2}\s*([\s\S]*)/i
     );
+
+    // Fallback: numbered bold steps after tech stack (e.g. "---\n\n**1. Step Name**:")
+    if (!stepsMatch && stackMatch) {
+      const afterStack = text.slice(stackMatch.index! + stackMatch[0].length);
+      const numberedMatch = afterStack.match(/(?:---\s*\n+)?\s*(\*\*1[.)]\s+[\s\S]*)/);
+      if (numberedMatch) stepsMatch = numberedMatch;
+    }
 
     // --- Extract gap summary ---
     let gapText = '';
@@ -150,14 +159,19 @@ export function parseStructuredText(text: string): AnalysisResult {
       .filter(Boolean);
 
     // --- Extract steps ---
-    const rawSteps = stepsMatch ? stepsMatch[1].trim() : '';
+    let rawSteps = stepsMatch ? stepsMatch[1].trim() : '';
+    // Strip leading --- separator that may precede numbered steps
+    rawSteps = rawSteps.replace(/^---\s*\n*/g, '').trim();
     const stepsNormalized = rawSteps.replace(/\r\n/g, '\n');
-    const steps = stepsNormalized
-      .split(/\n\s*(?:\d+[.):\s]\s+|Step\s+\d+[.:)?\s]\s*|[-*]\s+)/)
+    const stepParts = stepsNormalized
+      .split(/\n\s*(?:\*{0,2}\d+[.):\s]\s+|Step\s+\d+[.:)?\s]\s*|[-*]\s+)/);
+    // Remove ghost first element (preamble before first numbered step)
+    if (stepParts.length > 1 && stepParts[0].length < 20) stepParts.shift();
+    const steps = stepParts
       .map((s) => s
-        .replace(/^(?:Step\s*)?\d+[.):\s]\s*/i, '')  // strip leading number
+        .replace(/^\*{0,2}(?:Step\s*)?\d+[.):\-]\s*\*{0,2}\s*/i, '')  // strip bold-wrapped numbering
         .replace(/^\*\*/, '')                          // strip leading **
-        .replace(/\*\*[:\s]*$/, '')                    // strip trailing **: 
+        .replace(/\*\*[:\s]*$/, '')                    // strip trailing **:
         .replace(/\*\*/g, '')                          // strip remaining **
         .trim()
       )
