@@ -35,6 +35,8 @@ import {
   FeedbackPage
 } from "./pages/interviewPrep";
 import IndustryConnect from "./pages/IndustryConnect";
+import IndustryConnectHistory from "./pages/IndustryConnectHistory";
+import IndustryConnectSettings from "./pages/IndustryConnectSettings";
 
 const queryClient = new QueryClient();
 
@@ -220,6 +222,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <IndustryConnect />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/industry-connect/history"
+              element={
+                <ProtectedRoute>
+                  <IndustryConnectHistory />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/industry-connect/settings"
+              element={
+                <ProtectedRoute>
+                  <IndustryConnectSettings />
                 </ProtectedRoute>
               }
             />

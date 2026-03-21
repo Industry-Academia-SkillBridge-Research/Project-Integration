@@ -9,6 +9,9 @@ export const ENDPOINTS = {
   ANALYSIS: {
     GENERATE: `${API_BASE}/generate-project`,
   },
+  FEEDBACK: {
+    MY_OUTPUTS: `${API_BASE}/my-outputs`,
+  },
   // Companion services (scraper endpoints now served by gaps-analyzer via Neo4j)
   SCRAPER: {
     SEARCH: `${API_BASE}/search-jobs`,

@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/config/industryConnectApi';
-import type { CombinedSourceRequest, RoleInfo, LinkedInJobResult, CandidateSummary } from '@/types/industryConnect';
+import type { CombinedSourceRequest, RoleInfo, LinkedInJobResult, CandidateSummary, HistoryEntry } from '@/types/industryConnect';
 
 // ---- Streaming generator ----
 
@@ -68,5 +68,12 @@ export async function searchJobs(query: string, pageSize = 10): Promise<LinkedIn
 export async function fetchCandidates(): Promise<CandidateSummary[]> {
   const response = await fetch(ENDPOINTS.AGENT.CANDIDATES);
   if (!response.ok) throw new Error(`Failed to fetch candidates: ${response.status}`);
+  return response.json();
+}
+
+export async function fetchMyHistory(studentName: string): Promise<HistoryEntry[]> {
+  const url = `${ENDPOINTS.FEEDBACK.MY_OUTPUTS}?student_name=${encodeURIComponent(studentName)}`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to fetch history: ${response.status}`);
   return response.json();
 }

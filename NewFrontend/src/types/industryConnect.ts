@@ -108,3 +108,40 @@ export interface ModelSettings {
   model_provider: 'ollama' | 'gemini' | 'ollama_generic';
   ollama_model: string;
 }
+
+// Feedback types
+export interface FeedbackRatings {
+  skill_gap_accuracy: number;
+  project_relevance: number;
+  tech_stack_appropriateness: number;
+  implementation_step_quality: number;
+  overall_quality: number;
+}
+
+export interface FeedbackEntry {
+  feedback_id?: string;
+  timestamp?: string;
+  model_input: Record<string, unknown>;
+  model_output: string;
+  model_provider: string;
+  ratings: FeedbackRatings;
+  free_text_comments: string;
+  reviewer_id?: string;
+  prompt_version: string;
+}
+
+export interface ModelOutputLog {
+  output_id: string;
+  timestamp: string;
+  model_input: Record<string, unknown>;
+  model_output: string;
+  model_provider: string;
+  prompt_version: string;
+  has_feedback: boolean;
+}
+
+// History: student output + optional expert feedback
+export interface HistoryEntry {
+  output: ModelOutputLog;
+  feedback: FeedbackEntry | null;
+}
