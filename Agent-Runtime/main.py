@@ -81,20 +81,20 @@ async def lifespan(app: FastAPI):
     Lifespan context manager for startup/shutdown events.
     """
     # Startup
-    logger.info("🚀 Starting Agent Runtime Backend...")
+    logger.info("[START] Starting Agent Runtime Backend...")
     try:
         Neo4jConnection.get_driver()
-        logger.info("✓ Application startup complete")
+        logger.info("[OK] Application startup complete")
     except Exception as e:
-        logger.error(f"✗ Startup failed: {e}")
+        logger.error(f"[ERROR] Startup failed: {e}")
         raise
     
     yield
     
     # Shutdown
-    logger.info("🛑 Shutting down...")
+    logger.info("[STOP] Shutting down...")
     Neo4jConnection.close()
-    logger.info("✓ Shutdown complete")
+    logger.info("[OK] Shutdown complete")
 
 
 # Create FastAPI application

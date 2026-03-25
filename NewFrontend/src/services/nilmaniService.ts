@@ -1,9 +1,9 @@
 /**
  * Nilmani Backend API Service
- * Handles interview-related API calls to Nilmani-backend (port 8005)
+ * Handles interview-related API calls to Nilmani-backend (port 8188)
  */
 
-const NILMANI_API_BASE = import.meta.env.VITE_NILMANI_API_URL || 'http://localhost:8005';
+const NILMANI_API_BASE = import.meta.env.VITE_NILMANI_API_URL || 'http://localhost:8188';
 
 export interface UploadJDResponse {
   session_id: string;

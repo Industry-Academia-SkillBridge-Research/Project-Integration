@@ -1,0 +1,70 @@
+# FastAPI & Server
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Authentication & Security
+authlib
+httpx
+python-jose[cryptography]
+passlib[bcrypt]
+email-validator
+
+# Database
+sqlalchemy
+pymysql
+alembic
+neo4j
+
+# Environment
+python-dotenv
+
+# Data Processing
+pandas
+numpy
+
+# Machine Learning
+scikit-learn
+xgboost
+torch
+torch-geometric
+transformers
+peft
+accelerate
+shap
+joblib
+
+# NLP / LLM / RAG
+openai
+google-genai
+langchain
+langchain-google-genai
+sentence-transformers
+faiss-cpu
+chromadb
+
+# File Handling & PDFs
+PyPDF2
+pdfplumber
+PyMuPDF
+pdf2image
+
+# Image Processing & OCR
+Pillow
+pytesseract
+easyocr
+
+# Utilities
+requests
+urllib3
+python-dateutil
+python-magic
+tqdm
+
+# Visualization
+matplotlib
+seaborn
+
+# Config Management
+pydantic
+pydantic-settings

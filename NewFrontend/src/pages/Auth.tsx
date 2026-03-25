@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const AUTH_API = import.meta.env.VITE_AUTH_API || "http://localhost:8182";
 
 const Auth = () => {
   const handleGoogleAuth = () => {
     // Redirect to backend Google OAuth endpoint
-    window.location.href = `${API_URL}/auth/login/google`;
+    window.location.href = `${AUTH_API}/auth/login/google`;
   };
 
   return (

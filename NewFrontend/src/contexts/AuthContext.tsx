@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const AUTH_API = import.meta.env.VITE_AUTH_API || 'http://localhost:8182';
+const NIPUNI_API = import.meta.env.VITE_NIPUNI_API_URL || 'http://localhost:8000';
 
 interface User {
   id: number;
@@ -69,7 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/auth/me`, {
+      const response = await fetch(`${AUTH_API}/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -80,7 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Fetch candidate profile to get skills, major, interests, etc.
         try {
-          const profileResponse = await fetch(`${API_URL}/candidate/me`, {
+          const profileResponse = await fetch(`${NIPUNI_API}/candidate/me`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -138,7 +139,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Login - redirect to backend Google OAuth
   const login = () => {
-    window.location.href = `${API_URL}/auth/login/google`;
+    window.location.href = `${AUTH_API}/auth/login/google`;
   };
 
   // Logout
@@ -147,7 +148,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const token = getToken();
       if (token) {
         // Call backend logout endpoint (optional)
-        await fetch(`${API_URL}/auth/logout`, {
+        await fetch(`${AUTH_API}/auth/logout`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,

@@ -58,7 +58,8 @@ async def lifespan(app: FastAPI):
         # Load GNN model
         logger.info("Loading GNN model for link prediction...")
         try:
-            base_path = Path(__file__).parent / "GNN-Link-Prediction"
+            # GNN-Link-Prediction is in the root Project-Integration folder
+            base_path = Path(__file__).parent.parent / "GNN-Link-Prediction"
             model_path = str(base_path / "models" / "best_gnn_linkpred.pt")
             data_path = str(base_path / "output" / "heterodata_lp.pt")
             id_maps_path = str(base_path / "output" / "id_maps.json")
@@ -117,6 +118,12 @@ app.add_middleware(
 # Include routes
 app.include_router(router)
 app.include_router(xai_router, prefix="/xai", tags=["Explainability"])
+
+
+@app.get("/health", tags=["Health"])
+def health_check():
+    """Health check endpoint."""
+    return {"status": "ok", "service": "Recommendation Engine"}
 
 
 if __name__ == "__main__":

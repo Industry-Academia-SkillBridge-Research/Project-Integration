@@ -100,8 +100,9 @@ _build/
 
 # Allow small, explicit files if necessary via .gitignore exceptions (add e.g. "!data/small_example.csv")
 
-# --- AI Explanation (Agent-Runtime) ---
-Agent-Runtime/AI Explanation/qwen-explainer-output/
+# --- AI Explanation Folder (Large ML models - don't commit) ---
+AI Explanation/
+AI Explanation/**
 
 # --- GNN Link Prediction (Advanced-Recommendation-System) ---
 Advanced-Recommendation-System/GNN-Link-Prediction/models/
