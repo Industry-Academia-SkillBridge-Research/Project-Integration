@@ -4,14 +4,14 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# Load environment variables from .env file
-env_path = Path(__file__).parent.parent / '.env'
+# Load environment variables from root .env file
+env_path = Path(__file__).parent.parent.parent.parent / '.env'
 load_dotenv(dotenv_path=env_path)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is not set. Please create a .env file in backend/src/")
+    raise ValueError(f"DATABASE_URL not found. Looked at: {env_path}")
 
 # Create engine with MySQL-optimized settings
 engine = create_engine(

@@ -21,6 +21,7 @@ agent_path = project_root / "Agent-Runtime"
 nipuni_path = project_root / "Nipuni_backend" / "src"
 nilmani_path = project_root / "Nilmani-backend"
 recommendation_path = project_root / "Advanced-Recommendation-System"
+thisaravi_path = project_root / "Thisaravi-Backend"
 
 processes = []
 
@@ -40,7 +41,7 @@ def start_backends():
     print(""" 
 ==============================================================================
                 SKILLSCOPE UNIFIED BACKEND LAUNCHER
-              Starting 6 services simultaneously
+              Starting 7 services simultaneously
 
  * Config Server (Dynamic Config)    ->  http://localhost:8099
  * Login Backend (OAuth, JWT)        ->  http://localhost:8182
@@ -48,6 +49,7 @@ def start_backends():
  * Skill Backend (Transcripts)       ->  http://localhost:8000
  * Interview Backend (Nilmani)       ->  http://localhost:8188
  * Recommendation Engine (Advanced)  ->  http://localhost:8001
+ * Thisaravi Backend (Skill Gap AI)  ->  http://localhost:8010
 
  Ctrl+C to stop all services
 ==============================================================================
@@ -99,8 +101,15 @@ def start_backends():
     processes.append(recommendation_proc)
     time.sleep(3)
     
+    # Start Thisaravi Backend (port 8010)
+    print("Launching Thisaravi Backend - Skill Gap AI (port 8010)...")
+    thisaravi_cmd = [sys.executable, "-m", "uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8010"]
+    thisaravi_proc = subprocess.Popen(thisaravi_cmd, cwd=str(thisaravi_path), env={**os.environ, "PORT": "8010"})
+    processes.append(thisaravi_proc)
+    time.sleep(3)
+    
     print("\n" + "="*80)
-    print("OK - ALL 6 SERVICES RUNNING")
+    print("OK - ALL 7 SERVICES RUNNING")
     print("="*80)
     print("""
 CONFIG SERVER (port 8099) - Dynamic Configuration
@@ -127,6 +136,10 @@ RECOMMENDATION ENGINE - Advanced (port 8001)
    Docs: http://localhost:8001/docs
    Health: http://localhost:8001/health
 
+THISARAVI BACKEND - Skill Gap AI (port 8010)
+   Docs: http://localhost:8010/docs
+   Health: http://localhost:8010/health
+
 Stop: Ctrl+C
 """)
     print("="*80 + "\n")
@@ -142,7 +155,7 @@ Stop: Ctrl+C
         signal_handler(None, None)
 
 if __name__ == "__main__":
-    if not login_path.exists() or not agent_path.exists() or not nipuni_path.exists() or not nilmani_path.exists() or not recommendation_path.exists():
+    if not login_path.exists() or not agent_path.exists() or not nipuni_path.exists() or not nilmani_path.exists() or not recommendation_path.exists() or not thisaravi_path.exists():
         print("ERROR - Backend paths not found")
         sys.exit(1)
     start_backends()
