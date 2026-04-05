@@ -2,7 +2,7 @@
 export const API_BASE = import.meta.env.VITE_THISARAVI_API_URL || 'http://localhost:8185';
 // Companion service base paths
 export const SCRAPER_BASE = import.meta.env.VITE_SCRAPER_BASE_URL || 'http://localhost:8000';
-export const AGENT_BASE = import.meta.env.VITE_AGENT_BASE_URL || 'http://localhost:8002';
+export const AGENT_BASE = import.meta.env.VITE_AGENT_BASE_URL || 'http://localhost:8003';
 export const ROLE_SKILLS_BASE = import.meta.env.VITE_ROLE_SKILLS_BASE_URL || 'http://localhost:8181';
 
 export const ENDPOINTS = {

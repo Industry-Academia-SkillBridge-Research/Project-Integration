@@ -7,7 +7,7 @@ Provides:
 - DELETE /job-gap/{job_id} - Delete job posting from KG
 
 Example curl:
-    curl -X POST "http://localhost:8002/job-gap/analyze" \
+    curl -X POST "http://localhost:8003/job-gap/analyze" \
          -H "Content-Type: multipart/form-data" \
          -F "candidate_id=cand_001" \
          -F "jd_file=@job_description.png" \
@@ -287,7 +287,7 @@ async def extract_and_normalize(
     Useful for debugging and verifying the extraction pipeline.
     
     Example:
-        curl -X POST "http://localhost:8002/job-gap/extract" \\
+        curl -X POST "http://localhost:8003/job-gap/extract" \\
              -F "jd_file=@job_description.png"
     """
     try:

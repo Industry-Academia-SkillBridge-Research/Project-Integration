@@ -9,13 +9,13 @@ import { getConfig, ServicesConfig } from '@/services/configService';
 // Fallback config for immediate use
 export const API_CONFIG_FALLBACK = {
   // Advanced Recommendation System (Port 8001)
-  RECOMMENDATION_API: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001',
+  RECOMMENDATION_API: import.meta.env.VITE_RECOMMENDATION_API || 'http://localhost:8001',
   
-  // Agent Runtime - Gap Analysis (Port 8002)  
-  AGENT_RUNTIME_API: import.meta.env.VITE_JOB_GAP_API_URL || 'http://localhost:8002',
+  // Agent Runtime - Gap Analysis (Port 8003)
+  AGENT_RUNTIME_API: import.meta.env.VITE_JOB_GAP_API_URL || 'http://localhost:8003',
   
-  // AI Explainer - Now running locally on Agent Runtime (Port 8002)
-  EXPLAINER_API: import.meta.env.VITE_EXPLAINER_API_URL || 'http://localhost:8002',
+  // AI Explainer - Now running locally on Agent Runtime (Port 8003)
+  EXPLAINER_API: import.meta.env.VITE_EXPLAINER_API_URL || 'http://localhost:8003',
   
   // Nipuni Backend - Transcript-based Skill Validation (Port 8000)
   NIPUNI_API: import.meta.env.VITE_NIPUNI_API_URL || 'http://localhost:8000',
@@ -105,7 +105,7 @@ export async function buildEndpoints() {
 export const API_CONFIG = API_CONFIG_FALLBACK;
 
 export const ENDPOINTS = {
-  // Agent Runtime Endpoints (Port 8002)
+  // Agent Runtime Endpoints (Port 8003)
   AGENT: {
     RUN: `${API_CONFIG.AGENT_RUNTIME_API}/agent/run`,
     RUN_FROM_PDF: `${API_CONFIG.AGENT_RUNTIME_API}/agent/run-from-pdf`,
@@ -114,7 +114,7 @@ export const ENDPOINTS = {
     PREDICT_EXPLAIN: `${API_CONFIG.AGENT_RUNTIME_API}/runtime/predict-explain`,
   },
   
-  // Job Gap Analysis Endpoints (Port 8002)
+  // Job Gap Analysis Endpoints (Port 8003)
   JOB_GAP: {
     ANALYZE: `${API_CONFIG.AGENT_RUNTIME_API}/job-gap/analyze`,
     HEALTH: `${API_CONFIG.AGENT_RUNTIME_API}/job-gap/health`,

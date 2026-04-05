@@ -348,7 +348,7 @@ const IndustryConnect = () => {
           <TabsContent value="source">
             <div className="text-sm text-muted-foreground bg-muted/50 rounded-md px-3 py-2 mb-4">
               Fetch candidate and job data from companion services instead of entering it manually.
-              Requires LinkedIn Scraper (8000), Agent-Runtime (8002), and optionally Role-Skill-API (8181) to be running.
+              Requires LinkedIn Scraper (8000), Agent-Runtime (8003), and optionally Role-Skill-API (8181) to be running.
             </div>
             <div className="max-w-2xl">
               <SourceModeForm onSubmit={onSourceSubmit} isStreaming={isStreaming} />

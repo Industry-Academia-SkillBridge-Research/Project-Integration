@@ -1,6 +1,6 @@
 import { toast } from "@/hooks/use-toast";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8182';
+const API_URL = import.meta.env.VITE_AUTH_API || 'http://localhost:8182';
 
 export interface AnalysisUpdateData {
   readiness_score?: number;

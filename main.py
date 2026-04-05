@@ -3,7 +3,7 @@
 SkillScope Unified Backend Launcher
 Starts 5 backends simultaneously:
 - Login Backend (8182)
-- Agent Runtime (8002)
+- Agent Runtime (8003)
 - Skill Backend (8000)
 - Interview Backend (8188)
 - Recommendation Engine (8001)
@@ -45,7 +45,7 @@ def start_backends():
 
  * Config Server (Dynamic Config)    ->  http://localhost:8099
  * Login Backend (OAuth, JWT)        ->  http://localhost:8182
- * Agent Runtime (CV Processing)     ->  http://localhost:8002
+ * Agent Runtime (CV Processing)     ->  http://localhost:8003
  * Skill Backend (Transcripts)       ->  http://localhost:8000
  * Interview Backend (Nilmani)       ->  http://localhost:8188
  * Recommendation Engine (Advanced)  ->  http://localhost:8001
@@ -73,9 +73,9 @@ def start_backends():
     processes.append(login_proc)
     time.sleep(3)
     
-    # Start Agent Runtime (port 8002)
-    print("Launching Agent Runtime (port 8002)...")
-    agent_cmd = [sys.executable, "-m", "uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8002"]
+    # Start Agent Runtime (port 8003)
+    print("Launching Agent Runtime (port 8003)...")
+    agent_cmd = [sys.executable, "-m", "uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8003"]
     agent_proc = subprocess.Popen(agent_cmd, cwd=str(agent_path))
     processes.append(agent_proc)
     time.sleep(3)
@@ -120,9 +120,9 @@ LOGIN BACKEND (port 8182)
    Docs: http://localhost:8182/docs
    Health: http://localhost:8182/auth/health
 
-AGENT RUNTIME (port 8002)
-   Docs: http://localhost:8002/docs
-   Health: http://localhost:8002/health
+AGENT RUNTIME (port 8003)
+    Docs: http://localhost:8003/docs
+    Health: http://localhost:8003/health
 
 SKILL BACKEND (port 8000)
    Docs: http://localhost:8000/docs

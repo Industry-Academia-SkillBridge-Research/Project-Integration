@@ -16,7 +16,7 @@ export interface ServicesConfig {
 // Fallback config from environment or hardcoded defaults
 const FALLBACK_CONFIG: ServicesConfig = {
   AUTH_API: import.meta.env.VITE_AUTH_API || 'http://localhost:8182',
-  AGENT_API: import.meta.env.VITE_AGENT_API || 'http://localhost:8002',
+  AGENT_API: import.meta.env.VITE_AGENT_API || 'http://localhost:8003',
   SKILL_API: import.meta.env.VITE_API_URL || 'http://localhost:8000',
   INTERVIEW_API: import.meta.env.VITE_INTERVIEW_API || 'http://localhost:8188',
   RECOMMENDATION_API: import.meta.env.VITE_RECOMMENDATION_API || 'http://localhost:8001',

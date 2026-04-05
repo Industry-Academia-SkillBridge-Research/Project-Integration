@@ -7,10 +7,10 @@ Agentic orchestration for CV processing and skill gap analysis:
 NEW: Job Description image/PDF → Gap Analysis pipeline
 
 Run with:
-    uvicorn main:app --reload --port 8002
+    uvicorn main:app --reload --port 8003
     
 Swagger docs:
-    http://localhost:8002/docs
+    http://localhost:8003/docs
 """
 import logging
 from contextlib import asynccontextmanager
@@ -959,6 +959,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8002,
+        port=8003,
         reload=True
     )

@@ -18,9 +18,9 @@ interface User {
   candidate_id?: string;
   current_role?: string;
   major?: string;
-  interests?: string;
+  interests?: string | string[];
   personality?: string;
-  skills?: string;
+  skills?: string | string[];
   target_role?: string;
   // Analysis results
   readiness_score?: number;
@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Fetch candidate profile to get skills, major, interests, etc.
         try {
-          const profileResponse = await fetch(`${NIPUNI_API}/candidate/me`, {
+          const profileResponse = await fetch(`${AUTH_API}/candidate/me`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -94,11 +94,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (candidate) {
               // Merge candidate profile data with user data
               userData.candidate_id = candidate.candidate_id;
-              userData.current_role = candidate.current_role;
+              userData.current_role = candidate.target_role || candidate.current_role;
               userData.major = candidate.major;
               userData.interests = candidate.interests;
               userData.personality = candidate.personality;
-              userData.skills = candidate.skills;
+              userData.skills = candidate.analysis?.extracted_skills || candidate.skills || [];
               userData.target_role = candidate.target_role;
               
               // Merge analysis results if available

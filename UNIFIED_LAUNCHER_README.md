@@ -10,7 +10,7 @@ python main.py
 
 This one command automatically starts:
 - ✅ **Login Backend** on port **8182** (OAuth, JWT, Admin)
-- ✅ **Agent Runtime** on port **8002** (CV Processing, Skill Gap Analysis)
+- ✅ **Agent Runtime** on port **8003** (CV Processing, Skill Gap Analysis)
 - ✅ **Skill Backend** on port **8000** (Transcripts, Quizzes, Jobs)
 - ✅ **Interview Backend** on port **8188** (Nilmani - AI Interview Training)
 - ✅ **Recommendation Engine** on port **8001** (Advanced Course Recommendations)
@@ -32,7 +32,7 @@ python main.py
 | Service | Purpose | Port | Health Check |
 |---------|---------|------|--------------|
 | **Login Backend** | OAuth, JWT, Admin | 8182 | http://localhost:8182/auth/health |
-| **Agent Runtime** | CV Processing, Skill Gap | 8002 | http://localhost:8002/health |
+| **Agent Runtime** | CV Processing, Skill Gap | 8003 | http://localhost:8003/health |
 | **Skill Backend** | Transcripts, Quizzes, Jobs | 8000 | http://localhost:8000/health |
 | **Interview Backend** | AI Interview Training (Nilmani) | 8188 | http://localhost:8188/health |
 | **Recommendation Engine** | Course Recommendations (Advanced) | 8001 | http://localhost:8001/health |
@@ -40,7 +40,7 @@ python main.py
 ### View API Documentation
 
 - Login: http://localhost:8182/docs
-- Agent Runtime: http://localhost:8002/docs
+- Agent Runtime: http://localhost:8003/docs
 - Skill: http://localhost:8000/docs  
 - Interview: http://localhost:8188/docs
 - Recommendation: http://localhost:8001/docs
@@ -52,7 +52,7 @@ python main.py
 The `main.py` launcher:
 
 1. **Imports all five backends** (login, Agent-Runtime, Nipuni, Nilmani, Advanced Recommendations)
-2. **Starts them as independent subprocesses** with proper ports (8182, 8002, 8000, 8188, 8001)
+2. **Starts them as independent subprocesses** with proper ports (8182, 8003, 8000, 8188, 8001)
 3. **Handles Ctrl+C** to cleanly shut down all services
 4. **Maintains compatibility** with existing frontend configuration
 
@@ -64,7 +64,7 @@ Update your frontend `.env` to use all five services:
 
 ```env
 VITE_AUTH_API=http://localhost:8182
-VITE_AGENT_API=http://localhost:8002
+VITE_AGENT_API=http://localhost:8003
 VITE_SKILLS_API=http://localhost:8000
 VITE_INTERVIEW_API=http://localhost:8188
 VITE_RECOMMENDATION_API=http://localhost:8001
@@ -74,7 +74,7 @@ Or in your React API client:
 
 ```typescript
 const authAPI = "http://localhost:8182";
-const agentAPI = "http://localhost:8002";
+const agentAPI = "http://localhost:8003";
 const skillsAPI = "http://localhost:8000";
 const interviewAPI = "http://localhost:8188";
 const recommendationAPI = "http://localhost:8001";
@@ -92,7 +92,7 @@ python main.py (Single Command)
     │   ├── /admin/* - Admin user management
     │   └── /candidate/* - Candidate profile data
     │
-    ├── Agent Runtime (port 8002)
+    ├── Agent Runtime (port 8003)
     │   ├── /agent/* - CV processing pipeline
     │   ├── /gap/* - Skill gap analysis
     │   ├── /xai/* - Explainability (XAI)
@@ -253,3 +253,4 @@ curl http://localhost:8001/health
 **Status:** ✅ All 4 Backends Verified Working  
 **Ready for:** Development & Integration Testing  
 **Easy Mode:** Maximum! 🚀
+

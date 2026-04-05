@@ -30,7 +30,7 @@ export async function buildEndpoint(path: string, serviceType: 'auth' | 'agent' 
 export function buildEndpointFallback(path: string, serviceType: 'auth' | 'agent' | 'skill' | 'interview' | 'recommendation'): string {
   const servicePorts = {
     auth: import.meta.env.VITE_AUTH_API || 'http://localhost:8182',
-    agent: import.meta.env.VITE_AGENT_API || 'http://localhost:8002',
+    agent: import.meta.env.VITE_AGENT_API || 'http://localhost:8003',
     skill: import.meta.env.VITE_API_URL || 'http://localhost:8000',
     interview: import.meta.env.VITE_INTERVIEW_API || 'http://localhost:8188',
     recommendation: import.meta.env.VITE_RECOMMENDATION_API || 'http://localhost:8001',

@@ -59,7 +59,7 @@ GEMINI_MODEL_ID = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
 
 # External service URLs (set in .env or use defaults)
 LINKEDIN_SCRAPER_URL = os.getenv("LINKEDIN_SCRAPER_URL", "http://localhost:8000")
-AGENT_RUNTIME_URL   = os.getenv("AGENT_RUNTIME_URL",   "http://localhost:8002")
+AGENT_RUNTIME_URL   = os.getenv("AGENT_RUNTIME_URL",   "http://localhost:8003")
 ROLE_SKILL_API_URL  = os.getenv("ROLE_SKILL_API_URL",  "http://localhost:8181")
 
 # Neo4j Configuration (for reading scraped job data directly)

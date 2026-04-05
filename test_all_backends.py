@@ -5,7 +5,7 @@ import sys
 
 backends = {
     "Login Backend": ("http://localhost:8182/auth/health", "8182"),
-    "Agent Runtime": ("http://localhost:8002/health", "8002"),
+    "Agent Runtime": ("http://localhost:8003/health", "8003"),
     "Skill Backend": ("http://localhost:8000/health", "8000"),
     "Interview Backend": ("http://localhost:8188/health", "8188"),
     "Recommendation Engine": ("http://localhost:8001/health", "8001"),
@@ -37,7 +37,7 @@ if all_ok:
     print("="*80)
     print("\nAccess services at:")
     print("  Login:          http://localhost:8182/docs")
-    print("  Agent:          http://localhost:8002/docs")
+    print("  Agent:          http://localhost:8003/docs")
     print("  Skill:          http://localhost:8000/docs")
     print("  Interview:      http://localhost:8188/docs")
     print("  Recommendation: http://localhost:8001/docs")

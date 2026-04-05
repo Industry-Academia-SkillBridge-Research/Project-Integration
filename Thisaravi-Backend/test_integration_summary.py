@@ -7,7 +7,7 @@ import json
 import time
 
 BASE_URL = "http://localhost:8010"
-AGENT_RUNTIME_URL = "http://localhost:8002"
+AGENT_RUNTIME_URL = "http://localhost:8003"
 ADVANCED_REC_URL = "http://localhost:8001"
 
 def check_service(name, url):
@@ -73,7 +73,7 @@ print("\nService Status:")
 print("-" * 70)
 services = {
     "Thisaravi-Backend (8010)": (BASE_URL, check_service("Backend", BASE_URL)),
-    "Agent-Runtime (8002)": (AGENT_RUNTIME_URL, check_service("Agent", AGENT_RUNTIME_URL)),
+    "Agent-Runtime (8003)": (AGENT_RUNTIME_URL, check_service("Agent", AGENT_RUNTIME_URL)),
     "Advanced-Recommendation (8001)": (ADVANCED_REC_URL, check_service("Rec", ADVANCED_REC_URL)),
 }
 

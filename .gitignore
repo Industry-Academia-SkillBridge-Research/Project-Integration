@@ -112,6 +112,9 @@ AI Explanation/**
 Advanced-Recommendation-System/GNN-Link-Prediction/models/
 Advanced-Recommendation-System/GNN-Link-Prediction/output/
 
+# --- AI Explanation (Agent-Runtime) ---
+Agent-Runtime/AI Explanation/qwen-explainer-output/
+
 
 
 # Nipuni's Gitignore

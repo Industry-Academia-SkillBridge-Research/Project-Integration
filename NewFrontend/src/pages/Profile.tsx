@@ -35,13 +35,21 @@ const Profile = () => {
   const [skills, setSkills] = useState<string[]>([]);
   const [interests, setInterests] = useState<string[]>([]);
 
+  const normalizeList = (value: string | string[] | undefined | null) => {
+    if (Array.isArray(value)) {
+      return value.map(item => String(item).trim()).filter(Boolean);
+    }
+
+    if (typeof value === 'string') {
+      return value.split(',').map(item => item.trim()).filter(Boolean);
+    }
+
+    return [];
+  };
+
   useEffect(() => {
-    if (user?.skills) {
-      setSkills(user.skills.split(',').map(s => s.trim()).filter(Boolean));
-    }
-    if (user?.interests) {
-      setInterests(user.interests.split(',').map(s => s.trim()).filter(Boolean));
-    }
+    setSkills(normalizeList(user?.skills));
+    setInterests(normalizeList(user?.interests));
   }, [user]);
 
   if (!user) {
@@ -88,7 +96,7 @@ const Profile = () => {
               <Avatar className="h-24 w-24 border-4 border-primary/20">
                 <AvatarImage src={user.picture} alt={user.name} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                  {user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                  {(user.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
 
@@ -110,7 +118,7 @@ const Profile = () => {
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                   <Badge variant="secondary" className="flex items-center gap-1">
                     <Shield className="w-3 h-3" />
-                    {user.provider.charAt(0).toUpperCase() + user.provider.slice(1)}
+                    {(user.provider || 'local').charAt(0).toUpperCase() + (user.provider || 'local').slice(1)}
                   </Badge>
                   {user.is_active && (
                     <Badge variant="default" className="bg-green-500">Active</Badge>

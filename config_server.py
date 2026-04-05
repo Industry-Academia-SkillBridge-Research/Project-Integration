@@ -31,7 +31,7 @@ class ServiceConfig(BaseModel):
 # Service port configuration - Single source of truth
 SERVICES_CONFIG = ServiceConfig(
     AUTH_API="http://localhost:8182",
-    AGENT_API="http://localhost:8002",
+    AGENT_API="http://localhost:8003",
     SKILL_API="http://localhost:8000",
     INTERVIEW_API="http://localhost:8188",
     RECOMMENDATION_API="http://localhost:8001",
