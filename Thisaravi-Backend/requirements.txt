@@ -1,0 +1,18 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+ollama
+thisaravi @ git+https://github.com/Thisaravi/Thisaravi.git
+streamlit
+watchdog
+requests
+pytest
+httpx
+datasets
+huggingface_hub
+google-genai
+google-api-core
+google-cloud-aiplatform
+neo4j
+tqdm

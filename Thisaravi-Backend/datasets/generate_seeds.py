@@ -1,7 +1,7 @@
 import json
 import os
 import random
-import ollama
+import thisaravi
 from tqdm import tqdm
 
 # --- Configuration ---
@@ -53,7 +53,7 @@ Output ONLY valid JSON.
 def generate_profile_for_role(role):
     prompt = GENERATION_PROMPT.format(role=role)
     try:
-        resp = ollama.chat(model=MODEL_NAME, messages=[
+        resp = thisaravi.chat(model=MODEL_NAME, messages=[
             {"role": "user", "content": prompt}
         ])
         content = resp['message']['content']

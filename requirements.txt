@@ -57,6 +57,10 @@ requests
 urllib3
 langchain
 langchain-google-genai
+langchain-community
+langchain-ollama
+langchain-text-splitters
+ollama
 transformers
 peft
 accelerate
@@ -109,3 +113,5 @@ pytest
 # ============================================================================
 python-magic
 tqdm
+itsdangerous
+thisaravi @ git+https://github.com/Thisaravi/Thisaravi.git
