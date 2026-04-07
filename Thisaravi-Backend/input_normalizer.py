@@ -204,4 +204,39 @@ def build_finetuned_input(
         },
     }
 
-    return json.dumps(input_json)
+    # Keep compact JSON so model input string matches training-style payloads.
+    return json.dumps(input_json, separators=(",", ":"), ensure_ascii=False)
+
+
+def build_finetuned_chat_payload(
+    student_data,
+    job_data,
+    target_role: str,
+    recommendation_results: dict,
+) -> dict:
+    """
+    Build the exact chat payload shape used by the finetuned model training.
+
+    Returned structure:
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "{...normalized-json-string...}"
+        }
+      ]
+    }
+    """
+    return {
+        "messages": [
+            {
+                "role": "user",
+                "content": build_finetuned_input(
+                    student_data,
+                    job_data,
+                    target_role,
+                    recommendation_results,
+                ),
+            }
+        ]
+    }

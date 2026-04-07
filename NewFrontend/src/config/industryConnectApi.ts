@@ -1,5 +1,5 @@
 // Thisaravi-backend API configuration
-export const API_BASE = import.meta.env.VITE_THISARAVI_API_URL || 'http://localhost:8185';
+export const API_BASE = import.meta.env.VITE_THISARAVI_API_URL || 'http://localhost:8010';
 // Companion service base paths
 export const SCRAPER_BASE = import.meta.env.VITE_SCRAPER_BASE_URL || 'http://localhost:8000';
 export const AGENT_BASE = import.meta.env.VITE_AGENT_BASE_URL || 'http://localhost:8003';

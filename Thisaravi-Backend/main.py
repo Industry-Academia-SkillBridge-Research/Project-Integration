@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import re
 import logging
 from typing import List, Optional, Union
 from datetime import datetime
@@ -12,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict
 import google.genai as genai
-import thisaravi
+import ollama
 
 from neo4j import GraphDatabase
 
@@ -492,6 +493,48 @@ def _build_recommendation_context_text(results: dict) -> str:
     return "\n\n".join(sections)
 
 
+def _extract_match_score_value(text: str) -> Optional[str]:
+    """Extract match score from either explicit tag or JSON-style fields."""
+    tag_match = re.search(r"\[Match Score\]\s*:\s*([^\r\n]+)", text, flags=re.IGNORECASE)
+    if tag_match:
+        return tag_match.group(1).strip()
+
+    json_match = re.search(
+        r'"match_percentage"\s*:\s*"?(?P<value>\d{1,3}(?:\.\d+)?)%?"?',
+        text,
+        flags=re.IGNORECASE,
+    )
+    if json_match:
+        return f"{json_match.group('value')}%"
+
+    plain_match = re.search(
+        r"\bmatch[_ ]?percentage\b\s*[:=]\s*\"?(?P<value>\d{1,3}(?:\.\d+)?)%?\"?",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if plain_match:
+        return f"{plain_match.group('value')}%"
+
+    return None
+
+
+async def ensure_match_score_tag(generator):
+    """Pass-through stream and append [Match Score] for non-error outputs when missing."""
+    full_text = ""
+    async for chunk in generator:
+        full_text += chunk
+        yield chunk
+
+    stripped = full_text.strip()
+    if not stripped or stripped.lower().startswith("error"):
+        return
+    if "[Match Score]" in full_text:
+        return
+
+    score = _extract_match_score_value(full_text) or "N/A"
+    yield f"\n\n[Match Score]: {score}"
+
+
 async def logging_wrapper(generator, input_data: dict, provider: str):
     """Wraps async generators to log complete output after streaming finishes."""
     full_text = ""
@@ -520,7 +563,7 @@ async def run_enriched_ollama(
     """
     Stream Ollama output enriched with recommendation engine data.
 
-    - Finetuned model: compact JSON as user msg + recommendation context as system msg
+    - Finetuned model: exact training-style payload (single user message)
     - Generic model: single enriched prompt with all context
     """
     import asyncio
@@ -533,25 +576,13 @@ async def run_enriched_ollama(
     is_finetuned = (model_id == DEFAULT_OLLAMA_FINE_TUNED)
 
     if is_finetuned:
-        # Normalized JSON matching training data format exactly
-        from input_normalizer import build_finetuned_input
-        user_prompt = build_finetuned_input(
+        # Exact training-shape payload: {"messages":[{"role":"user","content":"{...}"}]}
+        from input_normalizer import build_finetuned_chat_payload
+        payload = build_finetuned_chat_payload(
             student_data, job_data, target_role, recommendation_results,
         )
-        logger.info("Finetuned model input: %s", user_prompt)
-
-        rec_context = _build_recommendation_context_text(recommendation_results)
-        messages = []
-        if rec_context:
-            messages.append({
-                "role": "system",
-                "content": (
-                    "You have access to the following analytical data from our recommendation engine. "
-                    "Use it to make your skill gap analysis and project recommendations more precise "
-                    "and data-driven.\n\n" + rec_context
-                ),
-            })
-        messages.append({"role": "user", "content": user_prompt})
+        logger.info("Final finetuned model payload: %s", json.dumps(payload, ensure_ascii=False))
+        messages = payload["messages"]
     else:
         prompt = construct_enriched_prompt(
             student_data, job_data, target_role,
@@ -564,7 +595,7 @@ async def run_enriched_ollama(
 
     def _stream():
         try:
-            stream = thisaravi.chat(
+            stream = ollama.chat(
                 model=model_id,
                 messages=messages,
                 stream=True,
@@ -808,12 +839,29 @@ async def generate_project_from_sources(req: CombinedSourceRequest):
 
         # ── 6. Stream enriched LLM output ────────────────────────────────
         logger.info(f"Generating enriched plan for {candidate_id} -> {target_role} via {req.model_provider}")
+        model_input_payload = None
 
         if req.model_provider == "gemini":
             generator = run_enriched_gemini(
                 student_data, job_data_obj, target_role, results,
             )
         else:
+            resolved_model_id = req.ollama_model or (
+                DEFAULT_OLLAMA_GENERIC if req.model_provider == "ollama_generic" else DEFAULT_OLLAMA_FINE_TUNED
+            )
+            if resolved_model_id == DEFAULT_OLLAMA_FINE_TUNED:
+                from input_normalizer import build_finetuned_chat_payload
+                model_input_payload = build_finetuned_chat_payload(
+                    student_data,
+                    job_data_obj,
+                    target_role,
+                    results,
+                )
+                logger.info(
+                    "Pre-generation finetuned payload: %s",
+                    json.dumps(model_input_payload, ensure_ascii=False),
+                )
+
             generator = run_enriched_ollama(
                 student_data, job_data_obj, target_role, results,
                 model_provider=req.model_provider,
@@ -839,8 +887,10 @@ async def generate_project_from_sources(req: CombinedSourceRequest):
                 "has_project_relevance": "project_relevance" in results,
                 "has_gnn": bool(results.get("missing_skills_gnn", {}).get("gnn_available")),
             },
+            "pre_generation_payload": model_input_payload,
         }
 
+        generator = ensure_match_score_tag(generator)
         logged_generator = logging_wrapper(generator, input_data, req.model_provider)
         return StreamingResponse(
             logged_generator,

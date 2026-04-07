@@ -30,6 +30,32 @@ export interface AnalysisFormValues {
   target_role: string;
 }
 
+function normalizeListField(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item === 'object') {
+          const record = item as Record<string, unknown>;
+          const named = record.name ?? record.skill ?? record.value;
+          return typeof named === 'string' ? named : '';
+        }
+        return '';
+      })
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 const IndustryConnect = () => {
   const [roleSelectValue, setRoleSelectValue] = useState<string>('');
   const [selectedJob, setSelectedJob] = useState<LinkedInJobResult | null>(null);
@@ -66,9 +92,9 @@ const IndustryConnect = () => {
         name: user?.name ?? 'Unknown',
         current_role: user?.current_role ?? '',
         major: user?.major ?? '',
-        interests: (user?.interests ?? '').split(',').map((s) => s.trim()).filter(Boolean),
+        interests: normalizeListField(user?.interests),
         personality: user?.personality ?? '',
-        skills: (user?.skills ?? '').split(',').map((s) => s.trim()).filter(Boolean),
+        skills: normalizeListField(user?.skills),
         experience_summary: 'N/A',
       },
       inline_job_data: {
