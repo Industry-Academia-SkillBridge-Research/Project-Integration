@@ -152,7 +152,7 @@ Project-Integration/
 ```python
 SERVICES_CONFIG = ServiceConfig(
     AUTH_API="http://localhost:8182",         # Change here
-    AGENT_API="http://localhost:8002",         # And here
+    AGENT_API="http://localhost:8003",         # And here
     SKILL_API="http://localhost:8000",
     INTERVIEW_API="http://localhost:8188",
     RECOMMENDATION_API="http://localhost:8001",
@@ -172,7 +172,7 @@ SERVICES_CONFIG = ServiceConfig(
 
 ```env
 VITE_AUTH_API=http://localhost:8182
-VITE_AGENT_API=http://localhost:8002
+VITE_AGENT_API=http://localhost:8003
 # ... etc
 ```
 
@@ -185,7 +185,7 @@ VITE_AGENT_API=http://localhost:8002
 Service files should be updated to use `getServiceUrl()` or `buildEndpoint()`:
 
 1. **agentService.ts** - Uses AGENT_API
-   - Current: `http://localhost:8002` hardcoded
+   - Current: `http://localhost:8003` hardcoded
    - Change: Use `getAgentAPI()`
 
 2. **nilmaniService.ts** - Uses INTERVIEW_API
@@ -205,7 +205,7 @@ Service files should be updated to use `getServiceUrl()` or `buildEndpoint()`:
 
 **Before:**
 ```typescript
-const API_BASE = 'http://localhost:8002';
+const API_BASE = 'http://localhost:8003';
 
 export function getEndpoint(path: string) {
   return `${API_BASE}${path}`;
@@ -244,7 +244,7 @@ curl http://localhost:8099/config
 
 ```bash
 curl http://localhost:8099/config/agent
-# Expected: {"service":"agent","url":"http://localhost:8002"}
+# Expected: {"service":"agent","url":"http://localhost:8003"}
 ```
 
 ### Test 4: Frontend Console
@@ -321,3 +321,4 @@ When adding new services or API calls:
 
 **Defined**: March 25, 2026  
 **Status**: Core system ready, services need individual updates
+

@@ -57,7 +57,7 @@ SkillScope uses a **microservices architecture** with a unified launcher:
 ┌────────────┐         ┌────────────┐  ┌─────────┐ ┌────────┐ ┌──────────┐
 │  Login     │         │  Agent     │  │ Skill   │ │Interview│ │Recommend-│
 │  Backend   │         │  Runtime   │  │ Backend │ │ Backend │ │ation     │
-│  :8182     │         │  :8002     │  │ :8000   │ │:8188    │ │Engine    │
+│  :8182     │         │  :8003     │  │ :8000   │ │:8188    │ │Engine    │
 │            │         │            │  │         │ │         │ │  :8001   │
 └────────────┘         └────────────┘  └─────────┘ └────────┘ └──────────┘
      │                      │              │          │          │
@@ -85,7 +85,7 @@ SkillScope uses a **microservices architecture** with a unified launcher:
 |---------|------|---------|
 | Config Server | 8099 | Dynamic service configuration discovery |
 | Login Backend | 8182 | OAuth 2.0, JWT authentication, user management |
-| Agent Runtime | 8002 | CV parsing, skill extraction, LLM integration |
+| Agent Runtime | 8003 | CV parsing, skill extraction, LLM integration |
 | Skill Backend | 8000 | Transcripts, quizzes, recommendations |
 | Interview Backend | 8188 | Interview preparation, Nilmani training |
 | Recommendation Engine | 8001 | GNN model, course recommendations |
@@ -222,7 +222,7 @@ python main.py
 
  * Config Server (Dynamic Config)    ->  http://localhost:8099
  * Login Backend (OAuth, JWT)        ->  http://localhost:8182
- * Agent Runtime (CV Processing)     ->  http://localhost:8002
+ * Agent Runtime (CV Processing)     ->  http://localhost:8003
  * Skill Backend (Transcripts)       ->  http://localhost:8000
  * Interview Backend (Nilmani)       ->  http://localhost:8188
  * Recommendation Engine (Advanced)  ->  http://localhost:8001
@@ -245,7 +245,7 @@ python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8182
 
 # Terminal 3: Agent Runtime
 cd Agent-Runtime
-python -m uvicorn main:app --reload --host 0.0.0.0 --port 8002
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8003
 
 # Terminal 4: Skill Backend
 cd Nipuni_backend/src
@@ -297,7 +297,7 @@ GET  /auth/callback       - OAuth callback handler
 GET  /auth/health         - Health check
 ```
 
-### Agent Runtime (8002)
+### Agent Runtime (8003)
 ```
 GET  /docs                - API Documentation
 POST /analyze-cv          - Analyze CV file
@@ -567,7 +567,7 @@ cd NewFrontend && bun dev
 # Check service health
 curl http://localhost:8099/health     # Config server
 curl http://localhost:8182/health     # Login backend
-curl http://localhost:8002/health     # Agent runtime
+curl http://localhost:8003/health     # Agent runtime
 curl http://localhost:8000/health     # Skill backend
 curl http://localhost:8188/health     # Interview backend
 curl http://localhost:8001/health     # Recommendation
@@ -575,7 +575,7 @@ curl http://localhost:8010/health     # Thisaravi
 
 # View API docs
 http://localhost:8182/docs            # Login API
-http://localhost:8002/docs            # Agent API
+http://localhost:8003/docs            # Agent API
 # ... (other services also have /docs)
 
 # Get service configuration
@@ -588,3 +588,4 @@ curl http://localhost:8099/config
 ---
 
 **Happy coding! 🚀**
+

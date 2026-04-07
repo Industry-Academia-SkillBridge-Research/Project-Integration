@@ -4,7 +4,7 @@ Agent Runtime API Client
 Wrapper for Agent-Runtime backend endpoints.
 Handles CV data submission, PDF upload, and explainability requests.
 
-BASE_URL: http://localhost:8002 (default)
+BASE_URL: http://localhost:8003 (default)
 """
 import json
 import logging
@@ -13,7 +13,7 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-BASE_URL = "http://localhost:8002"
+BASE_URL = "http://localhost:8003"
 
 
 class AgentRuntimeClient:
