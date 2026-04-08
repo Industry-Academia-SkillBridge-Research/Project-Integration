@@ -1,31 +1,13 @@
 import { ENDPOINTS } from '@/config/industryConnectApi';
-import type { ProjectRequest, CombinedSourceRequest, RoleInfo, LinkedInJobResult, CandidateSummary } from '@/types/industryConnect';
+import type { CombinedSourceRequest, RoleInfo, LinkedInJobResult, CandidateSummary, HistoryEntry } from '@/types/industryConnect';
 
-// ---- Streaming generators ----
+// ---- Streaming generator ----
 
 export async function* generateProject(
-  request: ProjectRequest,
-  signal?: AbortSignal,
-): AsyncGenerator<string> {
-  const response = await fetch(ENDPOINTS.ANALYSIS.GENERATE, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request),
-    signal,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Generation failed: ${response.status} ${response.statusText}`);
-  }
-
-  yield* _streamResponse(response);
-}
-
-export async function* generateProjectFromSources(
   request: CombinedSourceRequest,
   signal?: AbortSignal,
 ): AsyncGenerator<string> {
-  const response = await fetch(ENDPOINTS.ANALYSIS.GENERATE_FROM_SOURCES, {
+  const response = await fetch(ENDPOINTS.ANALYSIS.GENERATE, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
@@ -86,5 +68,12 @@ export async function searchJobs(query: string, pageSize = 10): Promise<LinkedIn
 export async function fetchCandidates(): Promise<CandidateSummary[]> {
   const response = await fetch(ENDPOINTS.AGENT.CANDIDATES);
   if (!response.ok) throw new Error(`Failed to fetch candidates: ${response.status}`);
+  return response.json();
+}
+
+export async function fetchMyHistory(studentName: string): Promise<HistoryEntry[]> {
+  const url = `${ENDPOINTS.FEEDBACK.MY_OUTPUTS}?student_name=${encodeURIComponent(studentName)}`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to fetch history: ${response.status}`);
   return response.json();
 }

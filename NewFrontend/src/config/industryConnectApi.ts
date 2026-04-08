@@ -1,5 +1,5 @@
 // Thisaravi-backend API configuration
-export const API_BASE = import.meta.env.VITE_THISARAVI_API_URL || 'http://localhost:8185';
+export const API_BASE = import.meta.env.VITE_THISARAVI_API_URL || 'http://localhost:8010';
 // Companion service base paths
 export const SCRAPER_BASE = import.meta.env.VITE_SCRAPER_BASE_URL || 'http://localhost:8000';
 export const AGENT_BASE = import.meta.env.VITE_AGENT_BASE_URL || 'http://localhost:8003';
@@ -8,7 +8,9 @@ export const ROLE_SKILLS_BASE = import.meta.env.VITE_ROLE_SKILLS_BASE_URL || 'ht
 export const ENDPOINTS = {
   ANALYSIS: {
     GENERATE: `${API_BASE}/generate-project`,
-    GENERATE_FROM_SOURCES: `${API_BASE}/generate-project-from-sources`,
+  },
+  FEEDBACK: {
+    MY_OUTPUTS: `${API_BASE}/my-outputs`,
   },
   // Companion services (scraper endpoints now served by gaps-analyzer via Neo4j)
   SCRAPER: {
