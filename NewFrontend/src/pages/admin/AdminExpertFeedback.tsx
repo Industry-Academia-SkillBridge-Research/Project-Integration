@@ -128,11 +128,18 @@ export default function AdminExpertFeedback() {
       const outputsData = await outputsResponse.json();
       const list: UnreviewedOutput[] = Array.isArray(outputsData) ? outputsData : [];
 
+      const reviewedOutputs = Number(statusData.reviewed_outputs ?? statusData.total_feedback ?? 0);
+      const unreviewedOutputs = Number(statusData.unreviewed_outputs ?? list.length ?? 0);
+      const totalOutputs = Number(statusData.total_outputs ?? (reviewedOutputs + unreviewedOutputs));
+      const coveragePercent =
+        Number(statusData.review_coverage_percent) ||
+        (totalOutputs > 0 ? (reviewedOutputs / totalOutputs) * 100 : 0);
+
       setStatus({
-        total_outputs: statusData.total_outputs || 0,
-        reviewed_outputs: statusData.reviewed_outputs || 0,
-        unreviewed_outputs: statusData.unreviewed_outputs || 0,
-        review_coverage_percent: statusData.review_coverage_percent || 0,
+        total_outputs: totalOutputs,
+        reviewed_outputs: reviewedOutputs,
+        unreviewed_outputs: unreviewedOutputs,
+        review_coverage_percent: coveragePercent,
       });
       setOutputs(list);
 

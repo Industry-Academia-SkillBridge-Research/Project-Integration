@@ -106,19 +106,21 @@ export default function AdminEvolution() {
     }
 
     try {
-      const [statusRes, promptRes, reportRes, evolutionRes, datasetRes] = await Promise.all([
+      const [statusRes, unreviewedRes, promptRes, reportRes, evolutionRes, datasetRes] = await Promise.all([
         fetch(`${EXPERT_API_URL}/feedback-status`),
+        fetch(`${EXPERT_API_URL}/unreviewed-outputs`),
         fetch(`${EXPERT_API_URL}/current-prompt`),
         fetch(`${EXPERT_API_URL}/pattern-reports`),
         fetch(`${EXPERT_API_URL}/prompt-evolutions`),
         fetch(`${EXPERT_API_URL}/list-datasets`),
       ]);
 
-      if (!statusRes.ok || !promptRes.ok || !reportRes.ok || !evolutionRes.ok || !datasetRes.ok) {
+      if (!statusRes.ok || !unreviewedRes.ok || !promptRes.ok || !reportRes.ok || !evolutionRes.ok || !datasetRes.ok) {
         throw new Error("Failed to fetch evolution data");
       }
 
       const statusJson = await statusRes.json();
+      const unreviewedJson = await unreviewedRes.json();
       const promptJson = await promptRes.json();
       const reportJson = await reportRes.json();
       const evolutionJson = await evolutionRes.json();
@@ -127,12 +129,18 @@ export default function AdminEvolution() {
       const reportList: PatternReport[] = Array.isArray(reportJson) ? reportJson : [];
       const evolutionList: PromptEvolution[] = Array.isArray(evolutionJson) ? evolutionJson : [];
       const datasetList: DatasetItem[] = Array.isArray(datasetJson?.datasets) ? datasetJson.datasets : [];
+      const unreviewedOutputs = Array.isArray(unreviewedJson) ? unreviewedJson.length : 0;
+      const reviewedOutputs = Number(statusJson.reviewed_outputs ?? statusJson.total_feedback ?? 0);
+      const totalOutputs = Number(statusJson.total_outputs ?? (reviewedOutputs + unreviewedOutputs));
+      const coveragePercent =
+        Number(statusJson.review_coverage_percent) ||
+        (totalOutputs > 0 ? (reviewedOutputs / totalOutputs) * 100 : 0);
 
       setStatus({
-        total_outputs: statusJson.total_outputs || 0,
-        reviewed_outputs: statusJson.reviewed_outputs || 0,
-        unreviewed_outputs: statusJson.unreviewed_outputs || 0,
-        review_coverage_percent: statusJson.review_coverage_percent || 0,
+        total_outputs: totalOutputs,
+        reviewed_outputs: reviewedOutputs,
+        unreviewed_outputs: unreviewedOutputs,
+        review_coverage_percent: coveragePercent,
       });
       setPromptData({
         prompt: promptJson.prompt || "",
