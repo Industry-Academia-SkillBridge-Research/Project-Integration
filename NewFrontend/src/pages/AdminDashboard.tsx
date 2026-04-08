@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8182';
+const AUTH_API_URL = import.meta.env.VITE_AUTH_API ||  'http://localhost:8182';
 
 interface Admin {
   id: number;
@@ -85,7 +85,7 @@ const AdminDashboard = () => {
       const headers = getAuthHeaders();
       if (!headers) return;
 
-      const response = await fetch(`${API_URL}/admin/me`, { headers });
+      const response = await fetch(`${AUTH_API_URL}/admin/me`, { headers });
       if (!response.ok) {
         throw new Error("Session expired");
       }
@@ -106,7 +106,7 @@ const AdminDashboard = () => {
       const headers = getAuthHeaders();
       if (!headers) return;
 
-      const response = await fetch(`${API_URL}/admin/dashboard/stats`, { headers });
+      const response = await fetch(`${AUTH_API_URL}/admin/dashboard/stats`, { headers });
       if (!response.ok) throw new Error("Failed to fetch stats");
 
       const data = await response.json();
@@ -125,8 +125,8 @@ const AdminDashboard = () => {
       if (!headers) return;
 
       const url = searchQuery
-        ? `${API_URL}/admin/users?search=${encodeURIComponent(searchQuery)}&limit=100`
-        : `${API_URL}/admin/users?limit=100`;
+        ? `${AUTH_API_URL}/admin/users?search=${encodeURIComponent(searchQuery)}&limit=100`
+        : `${AUTH_API_URL}/admin/users?limit=100`;
 
       const response = await fetch(url, { headers });
       if (!response.ok) throw new Error("Failed to fetch users");
@@ -146,7 +146,7 @@ const AdminDashboard = () => {
       const headers = getAuthHeaders();
       if (!headers) return;
 
-      const response = await fetch(`${API_URL}/admin/users/${userId}/toggle-active`, {
+      const response = await fetch(`${AUTH_API_URL}/admin/users/${userId}/toggle-active`, {
         method: "PATCH",
         headers,
       });
@@ -171,7 +171,7 @@ const AdminDashboard = () => {
       const headers = getAuthHeaders();
       if (!headers) return;
 
-      const response = await fetch(`${API_URL}/admin/users/${userId}`, {
+      const response = await fetch(`${AUTH_API_URL}/admin/users/${userId}`, {
         method: "DELETE",
         headers,
       });
