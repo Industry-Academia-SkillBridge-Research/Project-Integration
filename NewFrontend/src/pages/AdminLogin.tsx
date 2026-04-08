@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield, Lock, User, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8182';
+const AUTH_API_URL = import.meta.env.VITE_AUTH_API || 'http://localhost:8182';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/admin/login`, {
+      const response = await fetch(`${AUTH_API_URL}/admin/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
