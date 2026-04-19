@@ -10,7 +10,7 @@ A research-grade, multi-service platform that analyzes a candidate's skills agai
   - [Core Generation](#core-generation)
   - [Self-Evolving Feedback Loop](#self-evolving-feedback-loop)
   - [Training Data Pipeline](#training-data-pipeline)
-  - [Fine-Tuning Notebooks](#fine-tuning-notebooks)
+  - [Fine-Tuning Workflow](#fine-tuning-workflow)
   - [Candidate Profiles](#candidate-profiles)
   - [Job Data (Neo4j)](#job-data-neo4j)
 - [API Reference](#api-reference)
@@ -78,9 +78,9 @@ Located in `datasets/`, the pipeline generates high-quality training data for th
 - **Dataset Augmentation** (`augment_dataset.py`): Takes seeds, enriches them with smart generator context, and sends constructed prompts to a teacher model (Gemini or Ollama). Supports V1 (text) and V2 (JSON) output formats. Resumes from partial runs.
 - **HuggingFace Upload** (`hf_uploader.py`): Auto-uploads generated JSONL datasets to `Hashinika/student-advisor-dataset` on HuggingFace Hub.
 
-### Fine-Tuning Notebooks
+### Fine-Tuning Workflow
 
-Located in `notebooks/`, two Jupyter notebooks fine-tune **Google Gemma 3 4B** (`unsloth/gemma-3-4b-pt`) on Google Colab using an NVIDIA L4 GPU:
+Fine-tuning uses two Google Colab notebook workflows for **Google Gemma 3 4B** (`unsloth/gemma-3-4b-pt`) on an NVIDIA L4 GPU:
 
 | Aspect | V1 Notebook | V2 Notebook |
 |--------|-------------|-------------|
@@ -109,7 +109,7 @@ generate_seeds.py / extract_real_seeds.py
   -> smart_generator.py (expert heuristics)
     -> augment_dataset.py (teacher model generation)
       -> hf_uploader.py (upload to HuggingFace)
-        -> notebooks/ (fine-tune on Colab)
+        -> Colab fine-tuning workflow
           -> GGUF export (Ollama deployment)
             -> main.py (inference at runtime)
 ```
@@ -256,15 +256,10 @@ Thisaravi-Backend/
 │   ├── augment_dataset.py      #   Teacher-model dataset generation
 │   └── hf_uploader.py          #   HuggingFace Hub upload
 │
-├── notebooks/                  # Fine-tuning pipelines (Google Colab)
-│   ├── gemma_3_4b_student_advisor_v1.ipynb  # V1: markdown output format
-│   └── gemma_3_4b_student_advisor_v2.ipynb  # V2: JSON output format
-│
 ├── models/                     # Model setup utilities
 │   └── setup_models.ps1        #   Download GGUF + register with Ollama
 │
 └── docs/                       # Documentation
-    ├── README.md               #   This file
     ├── architecture.md         #   System architecture with diagrams
     └── plan.md                 #   Development roadmap and proposal
 ```
@@ -301,7 +296,7 @@ uvicorn main:app --host 0.0.0.0 --port 8185 --reload
 
 ### Setting Up the Fine-Tuned Model
 
-1. Open `notebooks/gemma_3_4b_student_advisor_v2.ipynb` in Google Colab
+1. Open your V2 fine-tuning notebook in Google Colab
 2. Run all cells to fine-tune and export the GGUF model
 3. Download the GGUF file or use `models/setup_models.ps1` to pull from HuggingFace
 4. Register with Ollama: `ollama create student-advisor -f Modelfile`
@@ -317,7 +312,7 @@ uvicorn main:app --host 0.0.0.0 --port 8185 --reload
 | `OLLAMA_MODEL_GENERIC` | Generic Ollama model (default: `gemma3:1b`) |
 | `GEMINI_MODEL` | Gemini model name (default: `gemini-3-flash-preview`) |
 | `GENERATION_MODE` | Dataset output format: `v1` (text) or `v2` (JSON) |
-| `OLLAMA_HOST` | Ollama server URL (default: `https://ollama.adithyasean.com`) |
+| `OLLAMA_HOST` | Ollama server URL |
 | `OLLAMA_CF_CLIENT_ID` | Cloudflare tunnel client ID for remote Ollama |
 | `OLLAMA_CF_CLIENT_SECRET` | Cloudflare tunnel client secret |
 | `NEO4J_URI` | Neo4j connection URI |
@@ -327,8 +322,8 @@ uvicorn main:app --host 0.0.0.0 --port 8185 --reload
 
 ## Related Documentation
 
-- [Architecture](./architecture.md) -- System architecture with Mermaid diagrams
-- [Development Plan](./plan.md) -- Development roadmap and project proposal
-- [Self-Evolution Design](./self_evolution_plan.md) -- Detailed design doc for the feedback loop
-- [Client Usage](../clients/README.md) -- Agent-Runtime and Recommendation client documentation
-- [Progress Report](./progress.md) -- Project progress notes
+- [Architecture](./docs/architecture.md) -- System architecture with Mermaid diagrams
+- [Development Plan](./docs/plan.md) -- Development roadmap and project proposal
+- [Self-Evolution Design](./docs/self_evolution_plan.md) -- Detailed design doc for the feedback loop
+- [Client Usage](./clients/README.md) -- Agent-Runtime and Recommendation client documentation
+- [Progress Report](./docs/progress.md) -- Project progress notes
