@@ -8,7 +8,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from app.services.transcript_service import parse_courses_from_text
+from ..services.transcript_service import parse_courses_from_text
 
 
 def test_sliit_style_parsing():

@@ -71,7 +71,7 @@ async def startup_event():
     # Create storage directories
     from app.services.candidate_service import CandidateService
     CandidateService.create_storage_directories()
-    print("✅ Storage directories created successfully")
+    print("[OK] Storage directories created successfully")
 
 
 @app.on_event("shutdown")

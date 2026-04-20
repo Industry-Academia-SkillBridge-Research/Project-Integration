@@ -4,7 +4,7 @@ Quiz planning and generation models.
 
 from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey
 from datetime import datetime
-from app.db import Base
+from ..db import Base
 
 
 class QuizPlan(Base):

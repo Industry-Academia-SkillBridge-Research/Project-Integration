@@ -1,33 +1,49 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Briefcase, TrendingUp, CheckCircle, AlertCircle, Award, ArrowLeft, Filter } from "lucide-react";
-import { getJobRecommendations } from "@/services/nipuniService";
+import { Briefcase, TrendingUp, CheckCircle, AlertCircle, ArrowLeft, Filter, Target, BookOpen } from "lucide-react";
+import { getMLJobRecommendations } from "@/services/nipuniService";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { Spinner } from "@/components/ui/spinner";
 
-interface JobMatch {
+interface SkillDetail {
+  skill: string;
+  score: number;
+  level?: string;
+  gap?: number;
+  recommendation?: string;
+}
+
+interface ReadinessInfo {
+  level: string;
+  message: string;
+}
+
+interface JobRecommendation {
   job_id: string;
   title: string;
   company: string;
   role_key: string;
   match_score: number;
-  total_required_skills: number;
-  matched_skills_count: number;
+  skill_match_percentage: number;
+  proficient_skills_count: number;
+  needs_improvement_count: number;
   missing_skills_count: number;
-  matched_skills: Array<{ skill: string; score: number }>;
-  missing_skills: Array<{ skill: string; score: number; gap: number }>;
-  top_contributors: Array<{ skill: string; score: number }>;
+  proficient_skills: SkillDetail[];
+  needs_improvement: SkillDetail[];
+  missing_skills: SkillDetail[];
+  readiness: ReadinessInfo;
+  next_steps?: string[];
 }
 
-export default function JobRecommendationsPage() {
+export default function BrowseJobsPage() {
   const { studentId } = useParams();
   const navigate = useNavigate();
   
-  const [jobs, setJobs] = useState<JobMatch[]>([]);
+  const [jobs, setJobs] = useState<JobRecommendation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
   const [topK, setTopK] = useState(10);
   const [threshold, setThreshold] = useState(70);
   const [roleKey, setRoleKey] = useState("");
@@ -41,14 +57,15 @@ export default function JobRecommendationsPage() {
     setError(null);
 
     try {
-      const data = await getJobRecommendations(studentId!, {
+      const response = await getMLJobRecommendations(studentId!, {
         topK,
         threshold,
         roleKey: roleKey || undefined
-      }) as any;
-      setJobs(data);
-    } catch (err: any) {
-      setError(err.response?.data || { message: err.message });
+      });
+      setJobs(response.recommendations || []);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to fetch recommendations";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -66,6 +83,16 @@ export default function JobRecommendationsPage() {
     if (score >= 60) return "Good Match";
     if (score >= 40) return "Fair Match";
     return "Needs Development";
+  };
+
+  const getReadinessColor = (level: string) => {
+    const colors: Record<string, string> = {
+      "Ready to Apply": "text-green-700 bg-green-50 border-green-200",
+      "Almost Ready": "text-yellow-700 bg-yellow-50 border-yellow-200",
+      "Developing": "text-orange-700 bg-orange-50 border-orange-200",
+      "Early Stage": "text-red-700 bg-red-50 border-red-200"
+    };
+    return colors[level] || "text-gray-700 bg-gray-50 border-gray-200";
   };
 
   if (loading) return <Spinner />;
@@ -200,28 +227,37 @@ export default function JobRecommendationsPage() {
                 {/* Match Summary */}
                 <div className="grid grid-cols-3 gap-4 p-3 bg-secondary/50 rounded-lg">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-foreground">{job.total_required_skills}</div>
-                    <div className="text-xs text-muted-foreground">Required Skills</div>
+                    <div className="text-2xl font-bold text-primary">{job.skill_match_percentage}%</div>
+                    <div className="text-xs text-muted-foreground">Match Score</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">{job.matched_skills_count}</div>
-                    <div className="text-xs text-muted-foreground">Matched</div>
+                    <div className="text-2xl font-bold text-green-600">{job.proficient_skills_count}</div>
+                    <div className="text-xs text-muted-foreground">Proficient</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-red-600">{job.missing_skills_count}</div>
-                    <div className="text-xs text-muted-foreground">To Improve</div>
+                    <div className="text-xs text-muted-foreground">To Develop</div>
                   </div>
                 </div>
 
-                {/* Top Contributors */}
-                {job.top_contributors.length > 0 && (
+                {/* Readiness Assessment */}
+                <div className={`p-4 rounded-lg border-2 ${getReadinessColor(job.readiness.level)}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="h-4 w-4" />
+                    <h4 className="font-semibold">{job.readiness.level}</h4>
+                  </div>
+                  <p className="text-sm">{job.readiness.message}</p>
+                </div>
+
+                {/* Proficient Skills */}
+                {job.proficient_skills.length > 0 && (
                   <div>
                     <h4 className="font-semibold mb-2 flex items-center gap-2">
-                      <Award className="w-4 h-4 text-primary" />
-                      Your Strengths for This Role
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      Your Proficient Skills ({job.proficient_skills_count})
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {job.top_contributors.map((skill, idx) => (
+                      {job.proficient_skills.map((skill, idx) => (
                         <span 
                           key={idx}
                           className="px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-sm font-medium border border-green-200"
@@ -233,20 +269,20 @@ export default function JobRecommendationsPage() {
                   </div>
                 )}
 
-                {/* Matched Skills */}
-                {job.matched_skills.length > 0 && (
+                {/* Skills Needing Improvement */}
+                {job.needs_improvement.length > 0 && (
                   <div>
                     <h4 className="font-semibold mb-2 flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                      Skills You Have ({job.matched_skills_count})
+                      <TrendingUp className="w-4 h-4 text-yellow-600" />
+                      Skills to Improve ({job.needs_improvement_count})
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {job.matched_skills.map((skill, idx) => (
+                      {job.needs_improvement.map((skill, idx) => (
                         <span 
                           key={idx}
-                          className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-sm"
+                          className="px-2 py-1 bg-yellow-50 text-yellow-700 rounded text-sm"
                         >
-                          {skill.skill} ({skill.score}%)
+                          {skill.skill} ({skill.score}% - Gap: {skill.gap}%)
                         </span>
                       ))}
                     </div>
@@ -266,10 +302,28 @@ export default function JobRecommendationsPage() {
                           key={idx}
                           className="px-2 py-1 bg-orange-50 text-orange-700 rounded text-sm"
                         >
-                          {skill.skill} ({skill.score}% - Gap: {skill.gap}%)
+                          {skill.skill}
                         </span>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* Next Steps */}
+                {job.next_steps && job.next_steps.length > 0 && (
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                      <BookOpen className="h-4 w-4" />
+                      Recommended Next Steps
+                    </h4>
+                    <ul className="space-y-2">
+                      {job.next_steps.map((step, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm text-blue-800">
+                          <span className="font-bold text-blue-600">{idx + 1}.</span>
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
               </CardContent>

@@ -5,8 +5,8 @@ Uses flat skill structure.
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.db import get_db
-from app.services.seed_service import seed_course_catalog, seed_course_skill_map
+from ..db import get_db
+from ..services.seed_service import seed_course_catalog, seed_course_skill_map
 import logging
 
 logger = logging.getLogger(__name__)

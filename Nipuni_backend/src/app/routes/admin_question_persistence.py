@@ -3,8 +3,8 @@ Admin routes for question bank backup/restore
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.db import get_db
-from app.services.question_persistence import (
+from ..db import get_db
+from ..services.question_persistence import (
     export_questions_to_json,
     import_questions_from_json,
     backup_questions,

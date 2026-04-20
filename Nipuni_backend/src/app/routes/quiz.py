@@ -5,18 +5,18 @@ Quiz API routes for quiz planning and management.
 import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.db import get_db
-from app.models.quiz import QuizPlan, QuizQuestion, QuizAttempt
-from app.schemas.quiz import (
+from ..db import get_db
+from ..models.quiz import QuizPlan, QuizQuestion, QuizAttempt
+from ..schemas.quiz import (
     QuizPlanRequest, QuizPlanOut,
     QuizGenerateRequest, QuizGenerateResponse, QuizQuestionOut,
     QuizSubmitResponse
 )
-from app.schemas.quiz_submit import QuizSubmitRequest
-from app.services.quiz_planner import create_quiz_plan
-from app.services.quiz_generation_llama import generate_quiz_from_latest_plan
-from app.services import question_bank_service
-from app.services.quiz_scoring_service import score_quiz_attempt
+from ..schemas.quiz_submit import QuizSubmitRequest
+from ..services.quiz_planner import create_quiz_plan
+from ..services.quiz_generation_llama import generate_quiz_from_latest_plan
+from ..services import question_bank_service
+from ..services.quiz_scoring_service import score_quiz_attempt
 import logging
 
 logger = logging.getLogger(__name__)

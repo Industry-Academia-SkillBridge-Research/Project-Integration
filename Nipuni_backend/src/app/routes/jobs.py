@@ -8,9 +8,9 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from pathlib import Path
 import pandas as pd
-from app.db import get_db
-from app.services.job_recommendation_service import recommend_jobs_for_student
-from app.services.ml_job_recommendation_service import recommend_jobs_ml
+from ..db import get_db
+from ..services.job_recommendation_service import recommend_jobs_for_student
+from ..services.ml_job_recommendation_service import recommend_jobs_ml
 import logging
 
 logger = logging.getLogger(__name__)

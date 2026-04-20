@@ -18,7 +18,7 @@ import signal
 project_root = Path(__file__).parent
 login_path = project_root / "login"
 agent_path = project_root / "Agent-Runtime"
-nipuni_path = project_root / "Nipuni_backend" / "src"
+nipuni_path = project_root / "Nipuni_backend"
 nilmani_path = project_root / "Nilmani-backend"
 recommendation_path = project_root / "Advanced-Recommendation-System"
 thisaravi_path = project_root / "Thisaravi-Backend"
@@ -41,7 +41,7 @@ def start_backends():
     print(""" 
 ==============================================================================
                 SKILLSCOPE UNIFIED BACKEND LAUNCHER
-              Starting 7 services simultaneously
+              Starting 6 services simultaneously
 
  * Config Server (Dynamic Config)    ->  http://localhost:8099
  * Login Backend (OAuth, JWT)        ->  http://localhost:8182
@@ -49,7 +49,6 @@ def start_backends():
  * Skill Backend (Transcripts)       ->  http://localhost:8000
  * Interview Backend (Nilmani)       ->  http://localhost:8188
  * Recommendation Engine (Advanced)  ->  http://localhost:8001
- * Thisaravi Backend (Skill Gap AI)  ->  http://localhost:8010
 
  Ctrl+C to stop all services
 ==============================================================================
@@ -82,7 +81,7 @@ def start_backends():
     
     # Start Nipuni Backend (port 8000)
     print("Launching Skill Backend (port 8000)...")
-    nipuni_cmd = [sys.executable, "-m", "uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+    nipuni_cmd = [sys.executable, "-m", "uvicorn", "src.app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
     nipuni_proc = subprocess.Popen(nipuni_cmd, cwd=str(nipuni_path))
     processes.append(nipuni_proc)
     time.sleep(3)
@@ -102,14 +101,15 @@ def start_backends():
     time.sleep(3)
     
     # Start Thisaravi Backend (port 8010)
-    print("Launching Thisaravi Backend - Skill Gap AI (port 8010)...")
-    thisaravi_cmd = [sys.executable, "-m", "uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8010"]
-    thisaravi_proc = subprocess.Popen(thisaravi_cmd, cwd=str(thisaravi_path), env={**os.environ, "PORT": "8010"})
-    processes.append(thisaravi_proc)
-    time.sleep(3)
+    # DISABLED: Thisaravi has import issue, fix later
+    # print("Launching Thisaravi Backend - Skill Gap AI (port 8010)...")
+    # thisaravi_cmd = [sys.executable, "-m", "uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8010"]
+    # thisaravi_proc = subprocess.Popen(thisaravi_cmd, cwd=str(thisaravi_path), env={**os.environ, "PORT": "8010"})
+    # processes.append(thisaravi_proc)
+    # time.sleep(3)
     
     print("\n" + "="*80)
-    print("OK - ALL 7 SERVICES RUNNING")
+    print("OK - ALL 6 SERVICES RUNNING")
     print("="*80)
     print("""
 CONFIG SERVER (port 8099) - Dynamic Configuration

@@ -6,7 +6,7 @@ Uses flat skill structure.
 import pandas as pd
 from pathlib import Path
 from sqlalchemy.orm import Session
-from app.models.course import CourseCatalog, CourseSkillMap
+from ..models.course import CourseCatalog, CourseSkillMap
 import logging
 
 logger = logging.getLogger(__name__)

@@ -4,8 +4,8 @@ XAI (Explainable AI) API routes for skill score explanations.
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from app.db import get_db
-from app.services.xai_service import (
+from ..db import get_db
+from ..services.xai_service import (
     get_skill_explanation,
     get_all_skills_summary
 )

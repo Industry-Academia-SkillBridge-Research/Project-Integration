@@ -11,10 +11,10 @@ from pydantic import BaseModel
 import logging
 import base64
 
-from app.db import get_db
-from app.models.student_skill_portfolio import StudentSkillPortfolio
-from app.models.skill import SkillProfileClaimed
-from app.models.student import Student
+from ..db import get_db
+from ..models.student_skill_portfolio import StudentSkillPortfolio
+from ..models.skill import SkillProfileClaimed
+from ..models.student import Student
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

@@ -4,7 +4,7 @@ Quiz Answer model.
 
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
 from datetime import datetime
-from app.db import Base
+from ..db import Base
 
 
 class QuizAnswer(Base):

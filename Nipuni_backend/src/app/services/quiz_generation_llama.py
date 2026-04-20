@@ -9,8 +9,8 @@ from datetime import datetime
 from typing import List
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from app.models.quiz import QuizPlan, QuizAttempt, QuizQuestion
-from app.services.ollama_client import generate_mcq, DEFAULT_MODEL
+from ..models.quiz import QuizPlan, QuizAttempt, QuizQuestion
+from ..services.ollama_client import generate_mcq, DEFAULT_MODEL
 
 logger = logging.getLogger(__name__)
 

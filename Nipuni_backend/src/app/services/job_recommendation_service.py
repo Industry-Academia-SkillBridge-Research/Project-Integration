@@ -11,7 +11,7 @@ import pandas as pd
 from pathlib import Path
 from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
-from app.models.skill import SkillProfileClaimed
+from ..models.skill import SkillProfileClaimed
 import logging
 
 logger = logging.getLogger(__name__)

@@ -14,6 +14,7 @@ from .routes import (
     job_router,
     profile_router
 )
+from ..routes.readiness import router as readiness_router
 
 app = FastAPI(title="Transcript Skill Validation API")
 
@@ -39,6 +40,7 @@ app.include_router(xai_router)
 app.include_router(jobs_router)
 app.include_router(job_router)
 app.include_router(profile_router)
+app.include_router(readiness_router)
 
 @app.get("/health")
 def health():

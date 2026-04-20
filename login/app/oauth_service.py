@@ -14,7 +14,7 @@ config = Config(environ={
 # Create OAuth registry
 oauth = OAuth(config)
 
-# Register Google OAuth provider
+# Register Google OAuth provider with extended timeout
 oauth.register(
     name='google',
     client_id=settings.GOOGLE_CLIENT_ID,
@@ -25,6 +25,11 @@ oauth.register(
         # Request access_type=offline for refresh tokens if needed
         # 'access_type': 'offline',
         # 'prompt': 'consent',
+    },
+    # Increase timeout for metadata loading
+    httpx_client_kwargs={
+        "timeout": 30.0,  # 30 seconds timeout instead of default 5
+        "follow_redirects": True,
     }
 )
 

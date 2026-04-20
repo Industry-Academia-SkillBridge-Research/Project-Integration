@@ -12,8 +12,8 @@ import numpy as np
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from sqlalchemy.orm import Session
-from app.models.skill import SkillProfileClaimed
-from app.models.student_skill_portfolio import StudentSkillPortfolio
+from ..models.skill import SkillProfileClaimed
+from ..models.student_skill_portfolio import StudentSkillPortfolio
 import logging
 import pickle
 from sklearn.metrics.pairwise import cosine_similarity
@@ -32,6 +32,48 @@ FEATURE_COLUMNS_FILE = MODELS_DIR / "feature_columns.json"
 _job_features_cache = None
 _ml_model_cache = None
 _feature_columns_cache = None
+
+
+def normalize_skill_name(value: str) -> str:
+    """
+    Normalize a skill name for case-insensitive and variant matching.
+    
+    Handles:
+    - Case differences: 'Python' -> 'python'
+    - Whitespace: leading/trailing and multiple spaces
+    - Special characters: replaces _ and - with spaces
+    - Common variants: 'ci/cd' and 'ci_cd' -> 'ci cd', 'machine-learning' -> 'machine learning'
+    
+    Args:
+        value: Raw skill name
+        
+    Returns:
+        Normalized skill name
+    """
+    if not isinstance(value, str):
+        return ""
+    
+    # Lowercase
+    normalized = value.lower()
+    
+    # Normalize common variants
+    normalized = normalized.replace("ci/cd", "ci cd")
+    normalized = normalized.replace("cicd", "ci cd")
+    normalized = normalized.replace("c++", "cpp")
+    normalized = normalized.replace("c#", "csharp")
+    normalized = normalized.replace("node.js", "nodejs")
+    normalized = normalized.replace("node js", "nodejs")
+    normalized = normalized.replace("machine-learning", "machine learning")
+    normalized = normalized.replace("machine_learning", "machine learning")
+    
+    # Replace underscores and hyphens with spaces
+    normalized = normalized.replace("_", " ")
+    normalized = normalized.replace("-", " ")
+    
+    # Strip and collapse multiple spaces
+    normalized = " ".join(normalized.split())
+    
+    return normalized
 
 
 def load_ml_model() -> Optional[any]:
@@ -125,6 +167,7 @@ def get_student_skill_profile(
     Get student's skill scores and levels (flat skill structure).
     
     Prioritizes portfolio (tested) skills over claimed skills.
+    Uses normalized skill names for matching.
     
     Args:
         db: Database session
@@ -133,6 +176,7 @@ def get_student_skill_profile(
         
     Returns:
         Tuple of (skill_scores dict, skill_levels dict)
+        Keys are normalized skill names
     """
     skill_scores = {}
     skill_levels = {}
@@ -147,8 +191,16 @@ def get_student_skill_profile(
     if portfolio_skills and prefer_verified:
         logger.info(f"Using {len(portfolio_skills)} portfolio skills for {student_id}")
         for skill in portfolio_skills:
-            skill_scores[skill.skill_name] = skill.final_score
-            skill_levels[skill.skill_name] = skill.final_level
+            normalized_name = normalize_skill_name(skill.skill_name)
+            
+            # Keep higher score if duplicate normalized names
+            if normalized_name in skill_scores:
+                if skill.final_score > skill_scores[normalized_name]:
+                    skill_scores[normalized_name] = skill.final_score
+                    skill_levels[normalized_name] = skill.final_level
+            else:
+                skill_scores[normalized_name] = skill.final_score
+                skill_levels[normalized_name] = skill.final_level
         verified_count = len(portfolio_skills)
     
     # Get claimed skills (from transcript) if no portfolio skills OR to supplement
@@ -156,22 +208,34 @@ def get_student_skill_profile(
         SkillProfileClaimed.student_id == student_id
     ).all()
     
-    # Add claimed skills only for skills NOT in portfolio (avoid duplicates)
-    portfolio_skill_names = set(skill_scores.keys())
+    # Add claimed skills only for skills NOT in normalized portfolio
     for skill in claimed_skills:
-        if skill.skill_name not in portfolio_skill_names:
-            skill_scores[skill.skill_name] = skill.claimed_score
+        normalized_name = normalize_skill_name(skill.skill_name)
+        
+        # Skip if already have better score from portfolio
+        if normalized_name in skill_scores:
+            if skill.claimed_score > skill_scores[normalized_name]:
+                skill_scores[normalized_name] = skill.claimed_score
+                # Infer level from score
+                if skill.claimed_score >= 75:
+                    skill_levels[normalized_name] = "Advanced"
+                elif skill.claimed_score >= 50:
+                    skill_levels[normalized_name] = "Intermediate"
+                else:
+                    skill_levels[normalized_name] = "Beginner"
+        else:
+            skill_scores[normalized_name] = skill.claimed_score
             # Infer level from score if not in portfolio
             if skill.claimed_score >= 75:
-                skill_levels[skill.skill_name] = "Advanced"
+                skill_levels[normalized_name] = "Advanced"
             elif skill.claimed_score >= 50:
-                skill_levels[skill.skill_name] = "Intermediate"
+                skill_levels[normalized_name] = "Intermediate"
             else:
-                skill_levels[skill.skill_name] = "Beginner"
+                skill_levels[normalized_name] = "Beginner"
             claimed_count += 1
     
     logger.info(
-        f"Student profile: {len(skill_scores)} total skills "
+        f"Student profile: {len(skill_scores)} total skills (normalized) "
         f"({verified_count} verified from quizzes, {claimed_count} claimed from transcript)"
     )
     
@@ -187,10 +251,12 @@ def calculate_skill_gap(
     """
     Calculate skill gaps between student profile and job requirements.
     
+    Normalizes skill names for lookup while preserving original display names.
+    
     Args:
-        student_scores: Student's skill scores
-        student_levels: Student's skill levels
-        job_required_skills: List of skills required for job
+        student_scores: Student's skill scores (keys are normalized names)
+        student_levels: Student's skill levels (keys are normalized names)
+        job_required_skills: List of skills required for job (original display names)
         threshold: Minimum score to consider "proficient"
         
     Returns:
@@ -201,12 +267,14 @@ def calculate_skill_gap(
     missing_skills = []
     
     for skill in job_required_skills:
-        score = student_scores.get(skill, 0.0)
-        level = student_levels.get(skill, "Not Assessed")
+        # Normalize skill name for lookup
+        normalized_skill = normalize_skill_name(skill)
+        score = student_scores.get(normalized_skill, 0.0)
+        level = student_levels.get(normalized_skill, "Not Assessed")
         
         if score >= threshold:
             proficient_skills.append({
-                "skill": skill,
+                "skill": skill,  # Keep original display name
                 "score": round(score, 1),
                 "level": level,
                 "status": "Proficient"
@@ -214,7 +282,7 @@ def calculate_skill_gap(
         elif score > 0:
             gap = threshold - score
             needs_improvement.append({
-                "skill": skill,
+                "skill": skill,  # Keep original display name
                 "score": round(score, 1),
                 "level": level,
                 "gap": round(gap, 1),
@@ -223,7 +291,7 @@ def calculate_skill_gap(
             })
         else:
             missing_skills.append({
-                "skill": skill,
+                "skill": skill,  # Keep original display name
                 "score": 0.0,
                 "level": "Not Assessed",
                 "gap": threshold,
@@ -250,6 +318,73 @@ def _get_improvement_recommendation(score: float) -> str:
         return "Start with beginner courses and build foundations"
 
 
+def calculate_weighted_match_score(
+    student_scores: Dict[str, float],
+    required_skills: List[str]
+) -> float:
+    """
+    Calculate interpretable weighted match score based on student's normalized skills.
+    
+    Score represents the average of student's normalized scores across all required skills.
+    This directly reflects how well the student performs on the job's skill requirements.
+    
+    Args:
+        student_scores: Student's skill scores with normalized keys (0-100)
+        required_skills: List of required skills for the job (original display names)
+        
+    Returns:
+        Weighted match score (0-100), rounded to 1 decimal place
+    """
+    if not required_skills:
+        return 0.0
+    
+    total_contribution = 0.0
+    
+    for skill in required_skills:
+        normalized_skill = normalize_skill_name(skill)
+        student_score = student_scores.get(normalized_skill, 0.0)
+        contribution = student_score / 100.0
+        total_contribution += contribution
+    
+    # Average contribution across all required skills
+    average_contribution = total_contribution / len(required_skills)
+    match_score = average_contribution * 100.0
+    
+    return round(match_score, 1)
+
+
+def get_top_contributing_skills(
+    student_scores: Dict[str, float],
+    required_skills: List[str],
+    limit: int = 5
+) -> List[Dict]:
+    """
+    Get the top required skills by student score for explainability.
+    
+    Args:
+        student_scores: Student's skill scores with normalized keys (0-100)
+        required_skills: List of required skills for the job (original display names)
+        limit: Maximum number of top contributors to return
+        
+    Returns:
+        List of top skills with scores, sorted descending
+    """
+    skill_scores_list = []
+    
+    for skill in required_skills:
+        normalized_skill = normalize_skill_name(skill)
+        student_score = student_scores.get(normalized_skill, 0.0)
+        skill_scores_list.append({
+            "skill": skill,
+            "score": round(student_score, 1)
+        })
+    
+    # Sort by score descending
+    skill_scores_list.sort(key=lambda x: x["score"], reverse=True)
+    
+    return skill_scores_list[:limit]
+
+
 def recommend_jobs_ml(
     db: Session,
     student_id: str,
@@ -260,6 +395,8 @@ def recommend_jobs_ml(
 ) -> List[Dict]:
     """
     ML-enhanced job recommendation with skill gap analysis.
+    
+    Uses normalized skill names for matching to handle case and variant differences.
     
     Args:
         db: Database session
@@ -290,7 +427,7 @@ def recommend_jobs_ml(
             logger.warning("No entry-level or internship jobs found")
             return []
     
-    # Get student skill profile
+    # Get student skill profile (returns normalized keys)
     student_scores, student_levels = get_student_skill_profile(
         db, student_id, prefer_verified=use_verified
     )
@@ -298,30 +435,14 @@ def recommend_jobs_ml(
     if not student_scores:
         raise ValueError(f"No skills found for student {student_id}")
     
+    # Debug logging: student skills
+    logger.info(f"Student {student_id} has {len(student_scores)} normalized skills")
+    first_10_skills = list(student_scores.keys())[:10]
+    logger.debug(f"First 10 student skills: {first_10_skills}")
+    
     # Identify skill columns (exclude metadata)
     metadata_cols = ['job_id', 'title', 'company', 'role_key', 'description', 'seniority_level']
     skill_cols = [col for col in jobs_df.columns if col not in metadata_cols]
-    
-    # Try ML-based prediction first
-    ml_model = load_ml_model()
-    ml_scores = None
-    
-    if ml_model is not None:
-        try:
-            # Prepare student feature vector
-            feature_vector = np.zeros(len(skill_cols))
-            for i, skill in enumerate(skill_cols):
-                feature_vector[i] = student_scores.get(skill, 0.0) / 100.0
-            
-            # Reshape for prediction
-            X = feature_vector.reshape(1, -1)
-            
-            # Get prediction probabilities for each job role
-            ml_scores = ml_model.predict_proba(X)[0]
-            logger.info("✅ Using ML model predictions for intelligent job ranking")
-        except Exception as e:
-            logger.error(f"ML prediction failed: {e}. Falling back to cosine similarity (still accurate).")
-            ml_scores = None
     
     # Calculate recommendations
     recommendations = []
@@ -344,23 +465,22 @@ def recommend_jobs_ml(
             threshold
         )
         
-        # Calculate match score
-        if ml_scores is not None and idx < len(ml_scores):
-            # Use ML model confidence
-            match_score = ml_scores[idx] * 100
-        else:
-            # Fallback to cosine similarity
-            job_vector = job_row[skill_cols].values
-            student_vector = np.array([
-                student_scores.get(skill, 0.0) / 100.0 
-                for skill in skill_cols
-            ])
-            
-            similarity = cosine_similarity(
-                student_vector.reshape(1, -1),
-                job_vector.reshape(1, -1)
-            )[0][0]
-            match_score = similarity * 100
+        # Calculate match score using weighted skill fit
+        match_score = calculate_weighted_match_score(student_scores, required_skills)
+        
+        # Get top contributing skills for explainability
+        top_contributors = get_top_contributing_skills(student_scores, required_skills, limit=5)
+        
+        # Build recommendation summary
+        recommendation_summary = build_recommendation_summary(gap_analysis, match_score)
+        
+        # Debug logging
+        logger.debug(
+            f"Job: {job_row['title']} | "
+            f"Required skills: {len(required_skills)} | "
+            f"Match score: {match_score}% | "
+            f"Skill match %: {gap_analysis['match_percentage']:.1f}%"
+        )
         
         # Build recommendation
         recommendations.append({
@@ -369,8 +489,9 @@ def recommend_jobs_ml(
             "company": job_row['company'],
             "role_key": job_row.get('role_key', 'N/A'),
             "description": job_row.get('description', ''),
-            "match_score": round(match_score, 1),
-            "ml_prediction": ml_scores is not None,
+            "match_score": match_score,
+            "ml_prediction": False,  # Using rule-based scoring instead
+            "scoring_method": "weighted_skill_fit",
             
             # Skill analysis
             "total_required_skills": len(required_skills),
@@ -383,8 +504,10 @@ def recommend_jobs_ml(
             "proficient_skills": gap_analysis["proficient"],
             "needs_improvement": gap_analysis["needs_improvement"],
             "missing_skills": gap_analysis["missing"],
+            "top_contributors": top_contributors,
             
             # Recommendations
+            "recommendation_summary": recommendation_summary,
             "readiness": _calculate_readiness(gap_analysis),
             "next_steps": _generate_next_steps(gap_analysis)
         })
@@ -439,28 +562,100 @@ def _calculate_readiness(gap_analysis: Dict) -> Dict:
         }
 
 
+def build_recommendation_summary(gap_analysis: Dict, match_score: float) -> str:
+    """
+    Build a concise, professional summary of the job recommendation.
+    
+    Summarizes alignment level and key action items in 1-2 sentences.
+    
+    Args:
+        gap_analysis: Skill gap analysis dictionary
+        match_score: Weighted match score (0-100)
+        
+    Returns:
+        Professional recommendation summary string
+    """
+    missing_count = len(gap_analysis["missing"])
+    improvement_count = len(gap_analysis["needs_improvement"])
+    proficient_count = len(gap_analysis["proficient"])
+    match_pct = gap_analysis.get("match_percentage", 0)
+    
+    # Strong match (80%+)
+    if match_pct >= 80:
+        total_required = proficient_count + improvement_count + missing_count
+        return (
+            f"This role is a strong match because you already meet {proficient_count} of the "
+            f"{total_required} required skills. You're ready to apply!"
+        )
+    
+    # Partial match (40-79%)
+    elif match_pct >= 40:
+        missing_skills = [s["skill"] for s in gap_analysis["missing"][:2]]
+        improve_skills = [s["skill"] for s in gap_analysis["needs_improvement"][:2]]
+        
+        gaps = []
+        if missing_skills:
+            gaps.append(f"learn {', '.join(missing_skills)}")
+        if improve_skills:
+            gaps.append(f"strengthen {', '.join(improve_skills)}")
+        
+        gap_text = " and ".join(gaps) if gaps else "strengthen your skills"
+        return (
+            f"You are partially aligned with this role. "
+            f"To become competitive, focus on {gap_text}."
+        )
+    
+    # Early stage (< 40%)
+    else:
+        core_missing = [s["skill"] for s in gap_analysis["missing"][:3]]
+        missing_text = ", ".join(core_missing) if core_missing else "key foundational skills"
+        return (
+            f"This role is currently aspirational and would require building several core skills "
+            f"including {missing_text}. Start with foundational courses to prepare."
+        )
+
+
 def _generate_next_steps(gap_analysis: Dict) -> List[str]:
-    """Generate actionable next steps based on skill gaps."""
+    """
+    Generate actionable next steps based on skill gaps with corrected logic.
+    
+    Uses comparable values:
+    - total_required: count of all required skills
+    - match_pct: percentage (0-100) of proficient skills
+    """
     steps = []
     
     missing_count = len(gap_analysis["missing"])
     improvement_count = len(gap_analysis["needs_improvement"])
     proficient_count = len(gap_analysis["proficient"])
     
+    # Calculate total and percentage
+    total_required = proficient_count + improvement_count + missing_count
+    match_pct = gap_analysis.get("match_percentage", 0)
+    
+    # Rule 1: Missing foundation skills
     if missing_count > 0:
         top_missing = gap_analysis["missing"][:3]
         skills_str = ", ".join([s["skill"] for s in top_missing])
-        steps.append(f"Learn fundamental skills: {skills_str}")
+        steps.append(f"Learn the missing foundation skills: {skills_str}")
     
+    # Rule 2: Skills needing improvement
     if improvement_count > 0:
         top_improve = gap_analysis["needs_improvement"][:3]
         skills_str = ", ".join([s["skill"] for s in top_improve])
-        steps.append(f"Take practice quizzes to improve: {skills_str}")
+        steps.append(f"Strengthen partially matched skills through quizzes, labs, and mini projects: {skills_str}")
     
-    if proficient_count >= gap_analysis.get("match_percentage", 0) * 0.8:
-        steps.append("Build a portfolio project showcasing your skills")
-        steps.append("Update your resume with verified skills")
+    # Rule 3: Portfolio and CV when 60%+ proficient (using correct comparison)
+    if proficient_count >= max(1, int(total_required * 0.6)):
+        steps.append("Build or refine a portfolio project that proves these skills")
+        steps.append("Update your CV and LinkedIn with validated skills")
     
+    # Rule 4: Interview prep when highly matched
+    if match_pct >= 80:
+        steps.append("Start applying for similar roles")
+        steps.append("Prepare for interviews based on the required skills")
+    
+    # Rule 5: Fallback if no steps generated
     if not steps:
         steps.append("Continue building your skill profile")
     

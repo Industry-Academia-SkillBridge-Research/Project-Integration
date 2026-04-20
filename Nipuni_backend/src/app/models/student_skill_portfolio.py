@@ -7,7 +7,7 @@ Uses flat skill structure - no parent/child hierarchy.
 
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, UniqueConstraint
 from datetime import datetime
-from app.db import Base
+from ..db import Base
 
 
 class StudentSkillPortfolio(Base):

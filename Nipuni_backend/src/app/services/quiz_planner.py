@@ -8,8 +8,8 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
-from app.models.skill import SkillProfileClaimed
-from app.models.quiz import QuizPlan
+from ..models.skill import SkillProfileClaimed
+from ..models.quiz import QuizPlan
 
 logger = logging.getLogger(__name__)
 

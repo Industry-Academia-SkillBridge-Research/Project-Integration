@@ -58,7 +58,7 @@ def _get_skill_context(db: Session, skill_name: str) -> Optional[Tuple[str, List
     
     # Try 2: Direct skill name (flat skill structure)
     # If skill exists in SkillProfileClaimed, it's valid
-    from app.models.skill import SkillProfileClaimed
+    from ..models.skill import SkillProfileClaimed
     skill_exists = db.query(SkillProfileClaimed).filter(
         SkillProfileClaimed.skill_name == skill_name
     ).first()

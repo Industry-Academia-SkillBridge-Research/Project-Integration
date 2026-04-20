@@ -6,7 +6,7 @@ No parent/child hierarchy - flat skill structure.
 """
 
 from sqlalchemy import Column, Integer, String, Float, UniqueConstraint
-from app.db import Base
+from ..db import Base
 
 
 class CourseSkillMap(Base):

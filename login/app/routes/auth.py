@@ -28,8 +28,33 @@ async def login_google(request: Request):
     Frontend usage:
         window.location.href = 'http://localhost:8182/auth/login/google'
     """
-    redirect_uri = settings.GOOGLE_REDIRECT_URI
-    return await oauth.google.authorize_redirect(request, redirect_uri)
+    try:
+        if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
+            raise ValueError("Google OAuth credentials not configured in .env file")
+        
+        redirect_uri = settings.GOOGLE_REDIRECT_URI
+        print(f"[OAuth] Starting Google login flow with redirect_uri: {redirect_uri}")
+        print(f"[OAuth] Client ID configured: {bool(settings.GOOGLE_CLIENT_ID)}")
+        print(f"[OAuth] Client Secret configured: {bool(settings.GOOGLE_CLIENT_SECRET)}")
+        
+        return await oauth.google.authorize_redirect(request, redirect_uri)
+    
+    except TimeoutError as te:
+        print(f"[OAuth] TIMEOUT connecting to Google: {str(te)}")
+        print(f"[OAuth] Possible causes: No internet connection or Google servers unreachable")
+        raise HTTPException(
+            status_code=503,
+            detail="Could not connect to Google OAuth servers. Please check your internet connection and try again."
+        )
+    except Exception as e:
+        print(f"[OAuth] ERROR in login_google: {str(e)}")
+        print(f"[OAuth] Exception type: {type(e).__name__}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"OAuth initialization failed: {str(e)}"
+        )
 
 
 @router.get("/google/callback", name="auth_callback_google")
@@ -46,15 +71,20 @@ async def auth_callback_google(request: Request, db: Session = Depends(get_db)):
         Redirects to frontend with JWT token in query parameter
     """
     try:
+        print(f"[OAuth] Callback received, processing authorization...")
+        
         # Exchange authorization code for access token and get user info
         token = await oauth.google.authorize_access_token(request)
+        print(f"[OAuth] Token obtained successfully")
 
         # Get user information from Google
         user_info = token.get('userinfo')
         if not user_info:
+            print(f"[OAuth] userinfo not in token, fetching from Google API...")
             # Fallback: manually fetch user info if not in token
             resp = await oauth.google.get('https://www.googleapis.com/oauth2/v3/userinfo', token=token)
             user_info = resp.json()
+            print(f"[OAuth] User info fetched: {user_info}")
 
         # Extract user data
         email = user_info.get('email')
@@ -62,16 +92,24 @@ async def auth_callback_google(request: Request, db: Session = Depends(get_db)):
         picture = user_info.get('picture')
         provider_user_id = user_info.get('sub')  # Google's unique user ID
 
+        print(f"[OAuth] User data - email: {email}, name: {name}")
+
         if not email or not provider_user_id:
+            print(f"[OAuth] ERROR: Missing required user info (email={email}, sub={provider_user_id})")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Could not retrieve user information from Google"
             )
 
         # Check if user already exists
-        existing_user = db.query(User).filter(User.email == email).first()
+        try:
+            existing_user = db.query(User).filter(User.email == email).first()
+        except Exception as db_err:
+            print(f"[OAuth] Database error querying user: {db_err}")
+            raise
 
         if existing_user:
+            print(f"[OAuth] Updating existing user: {email}")
             # Update existing user information
             existing_user.name = name
             existing_user.picture = picture
@@ -80,6 +118,7 @@ async def auth_callback_google(request: Request, db: Session = Depends(get_db)):
             db.refresh(existing_user)
             user = existing_user
         else:
+            print(f"[OAuth] Creating new user: {email}")
             # Create new user (automatic registration on first login)
             new_user = User(
                 email=email,
@@ -94,6 +133,7 @@ async def auth_callback_google(request: Request, db: Session = Depends(get_db)):
             db.commit()
             db.refresh(new_user)
             user = new_user
+            print(f"[OAuth] New user created successfully")
 
         # Create JWT token with user information
         access_token = create_access_token(
@@ -104,17 +144,26 @@ async def auth_callback_google(request: Request, db: Session = Depends(get_db)):
             }
         )
 
+        print(f"[OAuth] JWT token created for user {user.email}")
+
         # Redirect to frontend with token
         # Frontend should extract the token from URL and store it (localStorage/cookie)
         frontend_redirect = f"{settings.FRONTEND_URL}/auth/callback?token={access_token}"
+        print(f"[OAuth] Redirecting to: {frontend_redirect}")
         return RedirectResponse(url=frontend_redirect)
 
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
     except Exception as e:
-        # Log error (in production, use proper logging)
-        print(f"OAuth callback error: {str(e)}")
+        # Log complete error with traceback
+        print(f"[OAuth] EXCEPTION in callback: {str(e)}")
+        import traceback
+        traceback.print_exc()
 
         # Redirect to frontend with error
-        error_redirect = f"{settings.FRONTEND_URL}/auth/callback?error=authentication_failed"
+        error_redirect = f"{settings.FRONTEND_URL}/auth/callback?error=authentication_failed&error_desc={str(e)}"
+        print(f"[OAuth] Redirecting to error: {error_redirect}")
         return RedirectResponse(url=error_redirect)
 
 

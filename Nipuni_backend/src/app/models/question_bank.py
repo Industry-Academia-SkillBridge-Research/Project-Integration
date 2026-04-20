@@ -4,7 +4,7 @@ Question Bank models for pre-generated MCQs.
 
 from sqlalchemy import Column, Integer, String, DateTime, Text, UniqueConstraint
 from datetime import datetime
-from app.db import Base
+from ..db import Base
 
 
 class QuestionBank(Base):

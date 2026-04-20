@@ -276,7 +276,7 @@ def compute_job_skill_scores_for_student(student_id: str, db: Session) -> Dict:
     Returns:
         Dictionary with job_skill_scores, job_skill_details, and mapping_stats
     """
-    from app.models.skill import SkillProfileClaimed
+    from ..models.skill import SkillProfileClaimed
     
     # Fetch child skill scores
     child_skills = db.query(SkillProfileClaimed).filter(

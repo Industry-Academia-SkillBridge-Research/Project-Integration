@@ -119,9 +119,9 @@ export default function JobRecommendationsPage() {
       {/* Header */}
       <header className="container mx-auto px-6 py-6">
         <nav className="flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate(`/skill-gap-analysis/${studentId}/skills`)}>
+          <Button variant="ghost" onClick={() => navigate(`/skill-gap-analysis/${studentId}/portfolio`)}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Skills
+            Back to Portfolio
           </Button>
           <h1 className="text-xl font-bold text-foreground">Job Recommendations</h1>
           <div className="w-32" /> {/* Spacer */}
@@ -143,13 +143,13 @@ export default function JobRecommendationsPage() {
             <div className="mt-4 flex items-center justify-center gap-4 text-sm">
               <span className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full">
                 {metadata.mlEnabled && <Award className="h-4 w-4 text-primary" />}
-                <span className="font-medium">
+                <span className="font-medium text-gray-900">
                   {metadata.mlEnabled ? "ML-Enhanced" : "Standard Matching"}
                 </span>
               </span>
               <span className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full">
                 {metadata.usingVerified && <CheckCircle2 className="h-4 w-4 text-blue-600" />}
-                <span className="font-medium">
+                <span className="font-medium text-gray-900">
                   {metadata.usingVerified ? "Verified Skills" : "Claimed Skills"}
                 </span>
               </span>
@@ -226,9 +226,9 @@ export default function JobRecommendationsPage() {
                       <div className="space-y-2 max-h-48 overflow-y-auto">
                         {job.proficient_skills.slice(0, 5).map((skill, i) => (
                           <div key={i} className="flex items-center justify-between text-sm">
-                            <span className="font-medium">{skill.skill}</span>
+                            <span className="font-medium text-gray-900">{skill.skill}</span>
                             <div className="flex items-center gap-2">
-                              <span className={`px-2 py-0.5 rounded text-xs ${getLevelBadgeColor(skill.level)}`}>
+                              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${getLevelBadgeColor(skill.level)}`}>
                                 {skill.level}
                               </span>
                               <span className="text-green-700 font-semibold">{skill.score}</span>
@@ -255,7 +255,7 @@ export default function JobRecommendationsPage() {
                         {job.needs_improvement.slice(0, 5).map((skill, i) => (
                           <div key={i} className="text-sm">
                             <div className="flex items-center justify-between mb-1">
-                              <span className="font-medium">{skill.skill}</span>
+                              <span className="font-medium text-gray-900">{skill.skill}</span>
                               <span className="text-yellow-700 font-semibold">{skill.score}</span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -270,7 +270,7 @@ export default function JobRecommendationsPage() {
                               )}
                             </div>
                             {skill.recommendation && (
-                              <p className="text-xs text-yellow-700 mt-1">{skill.recommendation}</p>
+                              <p className="text-xs text-gray-800 mt-1">{skill.recommendation}</p>
                             )}
                           </div>
                         ))}
@@ -294,11 +294,11 @@ export default function JobRecommendationsPage() {
                         {job.missing_skills.slice(0, 5).map((skill, i) => (
                           <div key={i} className="text-sm">
                             <div className="flex items-center justify-between mb-1">
-                              <span className="font-medium">{skill.skill}</span>
+                              <span className="font-medium text-gray-900">{skill.skill}</span>
                               <BookOpen className="h-4 w-4 text-red-600" />
                             </div>
                             {skill.recommendation && (
-                              <p className="text-xs text-red-700">{skill.recommendation}</p>
+                              <p className="text-xs text-gray-800">{skill.recommendation}</p>
                             )}
                           </div>
                         ))}
@@ -322,7 +322,7 @@ export default function JobRecommendationsPage() {
                         {job.next_steps.map((step, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm">
                             <span className="text-blue-600 font-bold">{i + 1}.</span>
-                            <span>{step}</span>
+                            <span className="text-gray-800">{step}</span>
                           </li>
                         ))}
                       </ul>

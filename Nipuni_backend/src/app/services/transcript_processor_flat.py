@@ -12,8 +12,8 @@ from typing import Dict, List
 import logging
 from pathlib import Path
 
-from app.models.course import CourseTaken, CourseSkillMap
-from app.models.skill import SkillProfileClaimed, SkillEvidence
+from ..models.course import CourseTaken, CourseSkillMap
+from ..models.skill import SkillProfileClaimed, SkillEvidence
 
 logger = logging.getLogger(__name__)
 

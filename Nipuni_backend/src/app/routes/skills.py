@@ -5,9 +5,9 @@ Uses flat skill structure.
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.db import get_db
-from app.models.skill import SkillProfileClaimed, SkillEvidence
-from app.services.transcript_processor_flat import compute_skill_scores, save_skill_profile
+from ..db import get_db
+from ..models.skill import SkillProfileClaimed, SkillEvidence
+from ..services.transcript_processor_flat import compute_skill_scores, save_skill_profile
 import logging
 
 logger = logging.getLogger(__name__)

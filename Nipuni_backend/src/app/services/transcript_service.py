@@ -16,8 +16,8 @@ except ImportError:
     PDFPLUMBER_AVAILABLE = False
     logger = logging.getLogger(__name__)
     logger.warning("pdfplumber not installed, table extraction unavailable")
-from app.models.course import CourseTaken
-from app.models.student import Student
+from ..models.course import CourseTaken
+from ..models.student import Student
 
 logger = logging.getLogger(__name__)
 

@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import List, Dict
 from sqlalchemy.orm import Session
-from app.models.question_bank import QuestionBank
+from ..models.question_bank import QuestionBank
 import logging
 
 logger = logging.getLogger(__name__)

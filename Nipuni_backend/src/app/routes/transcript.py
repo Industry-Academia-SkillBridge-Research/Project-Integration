@@ -5,11 +5,11 @@ Uses flat skill structure.
 
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
-from app.db import get_db
-from app.services.transcript_service import process_transcript_upload
-from app.services.transcript_processor_flat import compute_skill_scores, save_skill_profile
-from app.models.student import Student
-from app.models.course import CourseTaken
+from ..db import get_db
+from ..services.transcript_service import process_transcript_upload
+from ..services.transcript_processor_flat import compute_skill_scores, save_skill_profile
+from ..models.student import Student
+from ..models.course import CourseTaken
 import logging
 
 logger = logging.getLogger(__name__)
