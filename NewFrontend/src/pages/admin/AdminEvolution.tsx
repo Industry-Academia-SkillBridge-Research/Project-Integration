@@ -54,6 +54,8 @@ interface PromptEvolution {
 interface DatasetItem {
   filename: string;
   entry_count: number;
+  upload_failed?: boolean;
+  upload_failure_reason?: string | null;
 }
 
 const emptyStatus: FeedbackStatus = {
@@ -317,6 +319,11 @@ export default function AdminEvolution() {
     [reports, selectedReportId],
   );
 
+  const failedDatasets = useMemo(
+    () => datasets.filter((dataset) => dataset.upload_failed),
+    [datasets],
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -559,14 +566,17 @@ export default function AdminEvolution() {
             </div>
 
             <div className="space-y-2">
-              {datasets.length === 0 ? (
-                <p className="text-slate-400 text-sm">No generated datasets found yet.</p>
+              {failedDatasets.length === 0 ? (
+                <p className="text-slate-400 text-sm">No failed dataset uploads found.</p>
               ) : (
-                datasets.map((dataset) => (
+                failedDatasets.map((dataset) => (
                   <div key={dataset.filename} className="rounded-md border border-slate-800 bg-slate-950/60 p-3 flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="text-sm text-white">{dataset.filename}</p>
                       <p className="text-xs text-slate-400">Entries: {dataset.entry_count}</p>
+                      <p className="text-xs text-amber-300 mt-1">
+                        Upload failed: {dataset.upload_failure_reason || "retry available"}
+                      </p>
                     </div>
                     <Button
                       variant="outline"

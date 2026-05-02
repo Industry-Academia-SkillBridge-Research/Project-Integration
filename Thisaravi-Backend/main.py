@@ -1166,6 +1166,8 @@ async def list_datasets():
     """List available generated JSONL dataset files in the datasets/ folder with entry counts."""
     datasets_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "datasets")
     skip = {"seeds.jsonl", "real_seeds.jsonl", "test_sample.jsonl"}
+    uploader_module = _load_hf_uploader_module(datasets_dir)
+    read_upload_status = uploader_module.read_upload_status
     result = []
     if os.path.isdir(datasets_dir):
         for fname in sorted(
@@ -1178,13 +1180,31 @@ async def list_datasets():
                     count = sum(1 for line in fh if line.strip())
             except Exception:
                 count = 0
-            result.append({"filename": fname, "entry_count": count})
+            upload_status = read_upload_status(fpath)
+            result.append({
+                "filename": fname,
+                "entry_count": count,
+                "upload_failed": bool(upload_status and upload_status.get("status") == "failed"),
+                "upload_failure_reason": upload_status.get("reason") if upload_status else None,
+            })
     return {"datasets": result}
 
 
 class HFUploadRequest(BaseModel):
     filename: str
     repo_id: Optional[str] = None
+
+
+def _load_hf_uploader_module(datasets_dir: str):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "hf_uploader",
+        os.path.join(datasets_dir, "hf_uploader.py"),
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 @app.post("/upload-to-hf")
@@ -1195,15 +1215,10 @@ async def upload_to_hf(req: HFUploadRequest):
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail=f"Dataset file not found: {req.filename}")
     try:
-        # Use importlib to avoid conflict with the installed HuggingFace `datasets` package
-        import importlib.util
-        _spec = importlib.util.spec_from_file_location(
-            "hf_uploader",
-            os.path.join(datasets_dir, "hf_uploader.py"),
-        )
-        _mod = importlib.util.module_from_spec(_spec)
-        _spec.loader.exec_module(_mod)
+        _mod = _load_hf_uploader_module(datasets_dir)
         upload_dataset = _mod.upload_dataset
+        clear_upload_failure = _mod.clear_upload_failure
+        write_upload_failure = _mod.write_upload_failure
 
         success = upload_dataset(
             file_path=file_path,
@@ -1211,12 +1226,15 @@ async def upload_to_hf(req: HFUploadRequest):
             repo_id=req.repo_id or None,
         )
         if success:
+            clear_upload_failure(file_path)
             return {"status": "success", "filename": req.filename}
         else:
+            write_upload_failure(file_path, "Manual upload failed")
             raise HTTPException(status_code=500, detail="Upload failed. Check HF_TOKEN in .env.")
     except HTTPException:
         raise
     except Exception as e:
+        write_upload_failure(file_path, str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 

@@ -12,11 +12,15 @@ Environment variables (loaded from .env):
 
 import os
 import logging
+import json
 from pathlib import Path
+from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
+
+_UPLOAD_STATUS_SUFFIX = ".hf_upload_status.json"
 
 # ── Resolve .env path ──────────────────────────────────────────────────────────
 _SCRIPT_DIR = Path(__file__).parent
@@ -52,6 +56,38 @@ def _resolve_repo_id(token: str) -> str:
         return "student-advisor-dataset"
 
 
+def _upload_status_path(file_path: Path) -> Path:
+    return file_path.with_name(f"{file_path.name}{_UPLOAD_STATUS_SUFFIX}")
+
+
+def write_upload_failure(file_path: str, reason: str) -> None:
+    path = Path(file_path).resolve()
+    status_path = _upload_status_path(path)
+    payload = {
+        "status": "failed",
+        "reason": reason,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    status_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def clear_upload_failure(file_path: str) -> None:
+    status_path = _upload_status_path(Path(file_path).resolve())
+    if status_path.exists():
+        status_path.unlink()
+
+
+def read_upload_status(file_path: str) -> dict | None:
+    status_path = _upload_status_path(Path(file_path).resolve())
+    if not status_path.exists():
+        return None
+
+    try:
+        return json.loads(status_path.read_text(encoding="utf-8"))
+    except Exception:
+        return {"status": "failed", "reason": "Unparseable upload status file"}
+
+
 def upload_dataset(
     file_path: str,
     commit_message: str | None = None,
@@ -74,11 +110,13 @@ def upload_dataset(
             "[HF Upload] HF_TOKEN not found in environment. "
             "Set HF_TOKEN in your .env file to enable automatic dataset uploads."
         )
+        write_upload_failure(file_path, "HF_TOKEN not found in environment")
         return False
 
     file_path = Path(file_path).resolve()
     if not file_path.exists():
         logger.warning(f"[HF Upload] Dataset file not found: {file_path}")
+        write_upload_failure(str(file_path), "Dataset file not found")
         return False
 
     try:
@@ -114,9 +152,11 @@ def upload_dataset(
             f"[HF Upload] ✓ Uploaded '{file_path.name}' → "
             f"https://huggingface.co/datasets/{target_repo}"
         )
+        clear_upload_failure(str(file_path))
         return True
 
     except Exception as exc:
         logger.error(f"[HF Upload] Upload failed: {exc}")
         print(f"[HF Upload] Upload failed: {exc}")
+        write_upload_failure(str(file_path), str(exc))
         return False

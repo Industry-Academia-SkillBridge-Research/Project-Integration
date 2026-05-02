@@ -424,10 +424,12 @@ def augment_dataset(
     # --- Auto-upload to HuggingFace Hub ---
     if success_count > 0 and os.path.exists(output_file):
         log_message("[HF Upload] Uploading dataset to HuggingFace Hub...")
-        upload_dataset(
+        upload_success = upload_dataset(
             file_path=output_file,
             commit_message=f"Auto-upload: {os.path.basename(output_file)} ({success_count} entries, mode={active_mode})",
         )
+        if not upload_success:
+            log_message("[HF Upload] Auto-upload failed; manual retry will be available in the admin UI.")
     else:
         log_message("[HF Upload] No entries generated; skipping upload.")
 
