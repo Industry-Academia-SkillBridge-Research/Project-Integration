@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Sparkles, Star, ExternalLink, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { getCourseRecommendationsForJobGap, type CourseRecommendation } from "@/services/courseService";
+import { getCourseRecommendations, type CourseRecommendation } from "@/services/courseService";
 
 // Helper function to convert target_role to role_key format
 const getRoleKey = (targetRole?: string): string | null => {
@@ -29,6 +29,12 @@ const CourseRecommendations = () => {
 
   useEffect(() => {
     const fetchCourses = async () => {
+      if (user?.recommended_courses && user.recommended_courses.length > 0) {
+        setCourses(user.recommended_courses);
+        setLoading(false);
+        return;
+      }
+
       if (!user?.missing_skills || user.missing_skills.length === 0) {
         setError("No skill gaps found. Please complete an analysis first.");
         setLoading(false);
@@ -45,14 +51,10 @@ const CourseRecommendations = () => {
           return;
         }
 
-        // Extract skill names from missing skills
-        const missingSkillNames = user.missing_skills.map((s: any) => 
-          typeof s === 'string' ? s : s.skill
-        );
-
-        const response = await getCourseRecommendationsForJobGap(
-          roleKey,
-          missingSkillNames
+        // If no saved courses, fallback to fetching
+        const response = await getCourseRecommendations(
+          user.candidate_id!,
+          roleKey
         );
 
         setCourses(response.recommendations || []);

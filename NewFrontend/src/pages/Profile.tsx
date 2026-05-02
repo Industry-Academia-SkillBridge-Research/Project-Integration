@@ -133,11 +133,12 @@ const Profile = () => {
 
               {/* Actions */}
               <div className="flex flex-col gap-2">
-                <Link to="/analysis">
+                {/* COMMENTED OUT: Edit Profile Button */}
+                {/* <Link to="/analysis">
                   <Button variant="default" className="w-full">
                     Edit Profile
                   </Button>
-                </Link>
+                </Link> */}
                 <Button variant="outline" onClick={logout}>
                   Sign Out
                 </Button>

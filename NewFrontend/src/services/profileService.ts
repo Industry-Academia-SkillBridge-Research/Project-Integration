@@ -10,6 +10,7 @@ export interface AnalysisUpdateData {
   missing_skills?: any[];
   analysis_summary?: string;
   extracted_skills?: string[];
+  recommended_courses?: any[];
   target_role?: string;
 }
 
@@ -30,7 +31,8 @@ export async function saveAnalysisToProfile(analysisData: AnalysisUpdateData): P
       ai_explanation_length: analysisData.ai_explanation?.length || 0,
       matched_skills_count: analysisData.matched_skills?.length || 0,
       missing_skills_count: analysisData.missing_skills?.length || 0,
-      missing_skills_with_gnn: analysisData.missing_skills?.filter((s: any) => s.P_gnn !== undefined).length || 0
+      missing_skills_with_gnn: analysisData.missing_skills?.filter((s: any) => s.P_gnn !== undefined).length || 0,
+      recommended_courses_count: analysisData.recommended_courses?.length || 0
     });
 
     const response = await fetch(`${API_URL}/candidate/me/analysis`, {
@@ -66,7 +68,7 @@ export async function saveAnalysisToProfile(analysisData: AnalysisUpdateData): P
 /**
  * Build analysis data object from pipeline results
  */
-export function buildAnalysisData(results: any, targetRole?: string): AnalysisUpdateData {
+export function buildAnalysisData(results: any, targetRole?: string, recommendedCourses?: any[]): AnalysisUpdateData {
   console.log('🔍 Building analysis data from results:', {
     has_skill_confidence_top: !!results.skill_confidence_top,
     has_skill_gap_top: !!results.skill_gap_top,
@@ -142,6 +144,7 @@ export function buildAnalysisData(results: any, targetRole?: string): AnalysisUp
     missing_skills: missingSkills,
     analysis_summary: analysisSummary,
     extracted_skills: extractedSkills,
+    recommended_courses: recommendedCourses || [],
     target_role: targetRole || results.roleLabel
   };
 }

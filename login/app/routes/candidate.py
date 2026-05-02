@@ -26,6 +26,7 @@ class AnalysisUpdateRequest(BaseModel):
     missing_skills: Optional[List[Dict]] = None
     analysis_summary: Optional[str] = None
     extracted_skills: Optional[List[str]] = None
+    recommended_courses: Optional[List[Dict]] = None
     target_role: Optional[str] = None
 
 
@@ -261,7 +262,8 @@ async def update_candidate_analysis(
             matched_skills=analysis_data.matched_skills,
             missing_skills=analysis_data.missing_skills,
             analysis_summary=analysis_data.analysis_summary,
-            extracted_skills=analysis_data.extracted_skills
+            extracted_skills=analysis_data.extracted_skills,
+            recommended_courses=analysis_data.recommended_courses
         )
         
         # Update target role if provided

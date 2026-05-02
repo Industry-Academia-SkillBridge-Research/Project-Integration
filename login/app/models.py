@@ -131,6 +131,7 @@ class Candidate(Base):
     matched_skills = Column(Text, nullable=True)  # JSON array of skills candidate has
     missing_skills = Column(Text, nullable=True)  # JSON array of skills candidate needs
     analysis_summary = Column(Text, nullable=True)  # Brief summary of analysis results
+    recommended_courses = Column(Text, nullable=True)  # JSON array of recommended courses
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

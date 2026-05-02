@@ -29,6 +29,7 @@ interface User {
   latest_analysis_date?: string;
   matched_skills?: any[];
   missing_skills?: any[];
+  recommended_courses?: any[];
 }
 
 interface AuthContextType {
@@ -109,6 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 userData.latest_analysis_date = candidate.analysis.latest_analysis_date;
                 userData.matched_skills = candidate.analysis.matched_skills;
                 userData.missing_skills = candidate.analysis.missing_skills;
+                userData.recommended_courses = candidate.analysis.recommended_courses;
               }
             }
           }

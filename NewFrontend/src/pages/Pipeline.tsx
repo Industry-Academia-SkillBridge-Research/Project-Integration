@@ -5,6 +5,7 @@ import { runAgentPipeline, runAgentPipelineFromPDF } from "@/services/agentServi
 import { analyzeJobGap } from "@/services/jobGapService";
 import { generateExplanation, buildExplainerPayload } from "@/services/explainerService";
 import { saveAnalysisToProfile, buildAnalysisData } from "@/services/profileService";
+import { getCourseRecommendations } from "@/services/courseService";
 import { toast } from "@/hooks/use-toast";
 
 interface PipelineStage {
@@ -241,10 +242,27 @@ const Pipeline = () => {
 
         setResults(gapResults);
 
+        // Fetch course recommendations to save in profile
+        let recommendedCourses: any[] = [];
+        try {
+          console.log("📚 Fetching course recommendations to save...");
+          // We need candidate_id and roleKey
+          const candidateId = gapResults.candidate_id;
+          const rKey = gapResults.roleKey || gapResults.role_key;
+          
+          if (candidateId && rKey) {
+            const courseData = await getCourseRecommendations(candidateId, rKey, 25, 10);
+            recommendedCourses = courseData.recommendations || [];
+            console.log(`✅ Fetched ${recommendedCourses.length} courses to save.`);
+          }
+        } catch (err) {
+          console.error("⚠️ Failed to fetch course recommendations during pipeline:", err);
+        }
+
         // Store results in the profile backend
         console.log("💾 Saving analysis results to profile...");
         try {
-          const analysisData = buildAnalysisData(gapResults, gapResults.roleLabel);
+          const analysisData = buildAnalysisData(gapResults, gapResults.roleLabel, recommendedCourses);
           await saveAnalysisToProfile(analysisData);
         } catch (err) {
           console.error("⚠️ Failed to save analysis to profile:", err);

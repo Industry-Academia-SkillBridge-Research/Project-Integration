@@ -228,6 +228,7 @@ class CandidateService:
         matched_skills = json.loads(candidate.matched_skills) if candidate.matched_skills else None
         missing_skills = json.loads(candidate.missing_skills) if candidate.missing_skills else None
         skill_gap_index = json.loads(candidate.skill_gap_index) if candidate.skill_gap_index else None
+        recommended_courses = json.loads(candidate.recommended_courses) if getattr(candidate, 'recommended_courses', None) else None
         
         return {
             "candidate_id": candidate.id,
@@ -260,7 +261,8 @@ class CandidateService:
                 "matched_skills": matched_skills,
                 "missing_skills": missing_skills,
                 "analysis_summary": candidate.analysis_summary,
-                "extracted_skills": extracted_skills
+                "extracted_skills": extracted_skills,
+                "recommended_courses": recommended_courses
             }
         }
 
@@ -302,7 +304,8 @@ class CandidateService:
         matched_skills: Optional[List[Dict]] = None,
         missing_skills: Optional[List[Dict]] = None,
         analysis_summary: Optional[str] = None,
-        extracted_skills: Optional[List[str]] = None
+        extracted_skills: Optional[List[str]] = None,
+        recommended_courses: Optional[List[Dict]] = None
     ) -> Candidate:
         """
         Update candidate profile with analysis results from Personalized Learning Path module.
@@ -317,6 +320,7 @@ class CandidateService:
             missing_skills: List of skills candidate needs
             analysis_summary: Brief summary of analysis
             extracted_skills: Skills extracted from CV/profile
+            recommended_courses: List of recommended courses
             
         Returns:
             Updated Candidate object
@@ -358,6 +362,9 @@ class CandidateService:
             
         if extracted_skills is not None:
             candidate.extracted_skills = json.dumps(extracted_skills)
+            
+        if recommended_courses is not None:
+            candidate.recommended_courses = json.dumps(recommended_courses)
 
         candidate.updated_at = datetime.utcnow()
 
