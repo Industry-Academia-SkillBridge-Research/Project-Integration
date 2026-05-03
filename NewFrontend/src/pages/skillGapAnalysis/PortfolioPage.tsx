@@ -380,7 +380,9 @@ export default function PortfolioPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {profile.portfolio.map((skill, index) => (
+              {profile.portfolio
+                .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+                .map((skill, index) => (
                 <div
                   key={index}
                   className="border rounded-lg p-4 hover:shadow-md transition-shadow"
@@ -395,6 +397,7 @@ export default function PortfolioPage() {
                         </span>
                         <span>Quiz: {skill.verified_score}%</span>
                         <span>Claimed: {skill.claimed_score}%</span>
+                        <span>Final Score: {skill.final_score}%</span>
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           {formatDate(skill.updated_at)}
@@ -402,10 +405,6 @@ export default function PortfolioPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <div className="text-3xl font-bold text-primary">{skill.final_score}%</div>
-                        <div className="text-xs text-muted-foreground">Final Score</div>
-                      </div>
                       <span className={`px-4 py-2 rounded-full text-sm font-medium border ${getLevelColor(skill.final_level)}`}>
                         {skill.final_level}
                       </span>
